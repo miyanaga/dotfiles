@@ -36,6 +36,14 @@
 - [ ] **Claude / ChatGPT デスクトップアプリにログイン**
 - [ ] **Tailscale ログイン**（メニューバーのアイコンから。SSO利用ならGoogleログインを先に）
 - [ ] **OrbStack 初回起動**（`docker` CLIのセットアップが走る）
+- [ ] **ライセンス・サブスク系アプリの認証**
+  - [ ] CleanShot X（ライセンスキー。1Passwordから）
+  - [ ] Microsoft Office（Microsoftアカウントでライセンス認証）
+  - [ ] djay Pro / Aqua Voice（各アカウントでログイン）
+
+> App Storeアプリ（Pixelmator Pro / djay Pro / UTM）は `brew bundle` 中に `mas` 経由で入るが、
+> **Apple IDサインインが先に済んでいないと失敗する**（失敗しても他のインストールは続行される）。
+> その場合はサインイン後に `brew bundle` を再実行すればよい。
 
 ---
 
