@@ -22,7 +22,6 @@ cask "tailscale-app"            # GUI版（旧cask名: tailscale）。インス�
 cask "firefox"
 cask "chromium"                 # 自動更新なし（brew upgradeで更新）
 cask "visual-studio-code"
-cask "android-studio"
 cask "arduino-ide"
 cask "blender"
 cask "aqua-voice"               # 音声入力（要ログイン）
