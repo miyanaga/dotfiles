@@ -1,5 +1,18 @@
 # 対話シェルのたびに読まれる設定
 
+# --- PATH ---------------------------------------------------------------
+# 基本は .zprofile で設定されるが、.zshrc しか読まれない環境
+# （エディタ内蔵ターミナルやzshサブシェル等）への保険としてここでも設定する
+typeset -U path PATH          # PATHの重複エントリを自動排除
+
+# Homebrew（未設定のときだけ）
+if [[ -x /opt/homebrew/bin/brew && -z "${HOMEBREW_PREFIX:-}" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Claude Code などが入る ~/.local/bin
+path=("$HOME/.local/bin" $path)
+
 # --- 履歴 ---------------------------------------------------------------
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=100000
