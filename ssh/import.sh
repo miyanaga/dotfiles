@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 新マシンで実行: export.sh で作った暗号化アーカイブから ~/.ssh を復元する。
+# 新マシンで実行: export.sh で作った暗号化アーカイブから
+# ~/.ssh と ~/.zsh_secrets を復元する。
 # 既存の ~/.ssh があれば退避してから展開し、パーミッションを整える。
 #
 # 使い方: ./import.sh <ssh-backup-YYYYMMDD.tar.gz.enc>
@@ -20,6 +21,9 @@ openssl enc -d -aes-256-cbc -pbkdf2 -in "$IN" | tar xzf - -C "$HOME"
 chmod 700 "$HOME/.ssh"
 find "$HOME/.ssh" -type f -exec chmod 600 {} +
 find "$HOME/.ssh" -type f -name '*.pub' -exec chmod 644 {} +
+
+# APIキー等のシークレット
+[[ -f "$HOME/.zsh_secrets" ]] && chmod 600 "$HOME/.zsh_secrets"
 
 echo
 echo "復元しました。動作確認:"

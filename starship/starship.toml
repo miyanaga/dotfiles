@@ -1,0 +1,19 @@
+# プロンプト設定（install.shで ~/.config/starship.toml にリンクされる）
+# 設定リファレンス: https://starship.rs/ja-JP/config/
+# 変更は保存した瞬間から新しいプロンプトに反映される（再起動不要）
+
+add_newline = false   # プロンプト間の空行なし
+
+[directory]
+truncation_length = 3   # 表示するディレクトリ階層の深さ
+
+[git_branch]
+symbol = ''             # ブランチ記号を省略してシンプルに
+
+# 調整例（コメントを外して使う）:
+# [character]
+# success_symbol = '[❯](green)'   # プロンプト記号を変える
+# [nodejs]
+# disabled = true                  # node バージョン表示を消す
+# [cmd_duration]
+# min_time = 5000                  # 5秒以上かかったコマンドだけ実行時間を表示

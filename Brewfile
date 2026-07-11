@@ -4,9 +4,10 @@
 # CLIツール
 brew "git"
 brew "mise"                     # node / go などのランタイム管理
-brew "starship"                 # プロンプト（zshrcが自動検出）
-brew "zsh-autosuggestions"      # 履歴からの入力補完サジェスト
-brew "zsh-syntax-highlighting"  # コマンドラインのシンタックスハイライト
+brew "starship"                       # プロンプト（調整は starship/starship.toml）
+brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
+brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
+# brew "zsh-syntax-highlighting"      # コマンドラインの色付け（欲しければ）
 
 # GUIアプリ
 cask "wezterm"

@@ -26,18 +26,39 @@ dotfiles/
 ├── install.sh          # シンボリックリンクを張るインストーラ
 ├── Brewfile            # Homebrewパッケージ一覧（brew bundleで一括導入）
 ├── zsh/
-│   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・補完・alias・プラグイン）
+│   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・部分一致補完・プラグイン）
 │   └── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
 ├── git/
 │   └── gitconfig       # → ~/.gitconfig
+├── starship/
+│   └── starship.toml   # → ~/.config/starship.toml  プロンプトの調整はここ
 ├── wezterm/
 │   └── wezterm.lua     # → ~/.config/wezterm/wezterm.lua
 ├── macos/
 │   └── defaults.sh     # キーボード・マウス等のシステム設定を適用するスクリプト
 └── ssh/
-    ├── export.sh       # 旧マシンで実行: ~/.ssh を暗号化アーカイブに
-    └── import.sh       # 新マシンで実行: アーカイブから ~/.ssh を復元
+    ├── export.sh       # 旧マシンで実行: ~/.ssh と ~/.zsh_secrets を暗号化アーカイブに
+    └── import.sh       # 新マシンで実行: アーカイブから復元
 ```
+
+## zshの構成（フレームワーク不使用・プラグイン2つだけ）
+
+以前使っていたprezto等のフレームワークは使わず、素のzsh + 最小限のプラグインで構成しています。
+
+| 欲しい機能 | 実現方法 |
+|---|---|
+| Tab補完の部分一致 | zsh標準機能（zshrcの `matcher-list` 設定。単語の途中でもマッチ） |
+| 入力中のサジェスト | `zsh-autosuggestions`（履歴＋補完候補をグレー表示、→キーで確定） |
+| ↑キーで部分一致の履歴検索 | `zsh-history-substring-search`（例: `docker` と打って↑） |
+| プロンプト | `starship`（調整は `starship/starship.toml`、保存すると即反映） |
+
+プラグインのインストールは `brew bundle` に含まれていますが、単体で入れる場合:
+
+```bash
+brew install zsh-autosuggestions zsh-history-substring-search starship
+```
+
+インストールするだけでOKです（zshrcが存在チェック付きで読み込むので、未インストールでも壊れない）。
 
 ## 新しいマシンでの導入手順
 
@@ -85,20 +106,29 @@ cd ~/dev/dotfiles && git pull
 brew bundle dump --force --file ~/dev/dotfiles/Brewfile
 ```
 
-## マシン固有・秘密の設定（.zshrc.local）
+## シークレットとマシン固有設定（git管理外の2ファイル）
 
-APIキーや特定マシンだけのPATHなど、**リポジトリに入れたくない設定は `~/.zshrc.local` に書きます**。zshrcの最後で自動的に読み込まれ、gitでは追跡されません（.gitignoreの `*.local`）。
+zshrcの最後で、存在すれば次の2ファイルを読み込みます。**どちらもgitには入れません**。
+
+| ファイル | 用途 | 例 |
+|---|---|---|
+| `~/.zsh_secrets` | APIキー・トークン類（chmod 600） | `export OPENAI_API_KEY=...` |
+| `~/.zshrc.local` | そのマシンだけの設定 | `export CHROME_PATH=...`、マシン固有のPATH |
+
+APIキーを増やすときは `~/.zsh_secrets` に追記するだけです。新マシンへは `ssh/export.sh` の暗号化アーカイブで `~/.ssh` と一緒に移送されます（下記）。
+
+さらに堅くするなら、1Passwordに書類として預ける方法もあります:
 
 ```bash
-# 例: ~/.zshrc.local
-export OPENAI_API_KEY="sk-..."
+op document create ~/.zsh_secrets --title "zsh_secrets"        # 預ける
+op document get "zsh_secrets" --out-file ~/.zsh_secrets && chmod 600 ~/.zsh_secrets  # 取り出す
 ```
 
-## SSHの移行（重要: gitに入れない）
+## SSHとシークレットの移行（重要: gitに入れない）
 
-`~/.ssh` は **このリポジトリでは管理しません**。理由:
+`~/.ssh` と `~/.zsh_secrets` は **このリポジトリでは管理しません**。理由:
 
-- 秘密鍵は絶対にgitに入れてはいけない（リモートにpushした瞬間に漏洩リスク。履歴から消すのも困難）
+- 秘密鍵・APIキーは絶対にgitに入れてはいけない（リモートにpushした瞬間に漏洩リスク。履歴から消すのも困難）
 - `~/.ssh/config` にも接続先ホスト名など秘匿すべき情報が多く含まれる
 
 代わりに、パスフレーズ付き暗号化アーカイブで直接運びます:
@@ -106,11 +136,11 @@ export OPENAI_API_KEY="sk-..."
 ```bash
 # 旧マシンで
 ~/dev/dotfiles/ssh/export.sh
-# → デスクトップに ssh-backup-YYYYMMDD.tar.gz.enc ができるので AirDrop で新マシンへ
+# → デスクトップに secrets-backup-YYYYMMDD.tar.gz.enc ができるので AirDrop で新マシンへ
 
 # 新マシンで
-~/dev/dotfiles/ssh/import.sh ~/Downloads/ssh-backup-YYYYMMDD.tar.gz.enc
-# → ~/.ssh が復元され、パーミッションも自動調整される
+~/dev/dotfiles/ssh/import.sh ~/Downloads/secrets-backup-YYYYMMDD.tar.gz.enc
+# → ~/.ssh と ~/.zsh_secrets が復元され、パーミッションも自動調整される
 
 # 動作確認後、アーカイブは両マシンから削除
 ```
@@ -125,6 +155,7 @@ export.sh は古い退役鍵の置き場（`.archives/`）と `~/.ssh` 内に残
 ## 注意事項
 
 - **このリポジトリをGitHubに置く場合はprivateリポジトリにする**こと。gitconfigのメールアドレス等が含まれるため
+- **preztoは廃止**。旧マシンでこの構成に切り替える場合は `./install.sh` 実行後（旧symlinkは自動退避される）、`rm -rf ~/.zprezto` と残った `~/.zpreztorc` 等のリンクを削除してよい。ただし旧マシンのprezto版zshrcにはmise未対応のPATH設定（asdf/pnpm/gcloud等）が残っているため、切り替えは新マシンの安定後でよい
 - 旧マシンの `~/.ssh` 内には秘密鍵をコミットした古いgitリポジトリ（`~/.ssh/.git`、2021年から未更新・リモートなし）が残っている。**絶対にリモートを追加してpushしないこと**。不要なら `rm -rf ~/.ssh/.git ~/.ssh/.archives` で撤去してよい（撤去前に必要な鍵が現役ディレクトリにあるか確認）
 - `macos/defaults.sh` のキーリピート速度はGUIの最速値を超えた設定のため、システム設定のキーボード画面でスライダーを触ると上書きされる。その場合は再度スクリプトを実行
 

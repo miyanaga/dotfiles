@@ -1,16 +1,11 @@
-# 対話シェルのたびに読まれる設定
+# 対話シェルのたびに読まれる設定（フレームワーク不使用）
 
 # --- PATH ---------------------------------------------------------------
-# 基本は .zprofile で設定されるが、.zshrc しか読まれない環境
-# （エディタ内蔵ターミナルやzshサブシェル等）への保険としてここでも設定する
+# 基本は .zprofile で設定されるが、.zshrc しか読まれない環境への保険
 typeset -U path PATH          # PATHの重複エントリを自動排除
-
-# Homebrew（未設定のときだけ）
 if [[ -x /opt/homebrew/bin/brew && -z "${HOMEBREW_PREFIX:-}" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
-
-# Claude Code などが入る ~/.local/bin
 path=("$HOME/.local/bin" $path)
 
 # --- 履歴 ---------------------------------------------------------------
@@ -20,42 +15,36 @@ SAVEHIST=100000
 setopt SHARE_HISTORY          # 複数ターミナル間で履歴を共有
 setopt HIST_IGNORE_ALL_DUPS   # 重複コマンドは古い方を消す
 setopt HIST_IGNORE_SPACE      # 先頭スペースのコマンドは履歴に残さない
-setopt HIST_REDUCE_BLANKS     # 余分な空白を詰めて保存
-
-# --- 基本オプション -------------------------------------------------------
-setopt AUTO_CD                # ディレクトリ名だけで cd
-setopt AUTO_PUSHD             # cd で自動的に pushd（cd -<Tab> で履歴移動）
-setopt PUSHD_IGNORE_DUPS
-setopt INTERACTIVE_COMMENTS   # コマンドラインで # コメントを許可
-setopt NO_BEEP
 
 bindkey -e                    # emacsキーバインド
 
-# --- 補完 ---------------------------------------------------------------
+# --- 補完（部分一致対応） ---------------------------------------------------
 autoload -Uz compinit && compinit
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'   # 小文字入力で大文字にもマッチ
-zstyle ':completion:*' menu select                     # 候補をメニュー選択
+# 大文字小文字を無視し、単語の先頭以外（部分一致）でもマッチさせる
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' menu select   # Tab連打で候補をメニュー選択
 
-# --- ツール類 -------------------------------------------------------------
-# mise (node / go などのランタイム管理)
+# --- mise (node / go などのランタイム管理) ----------------------------------
 command -v mise >/dev/null && eval "$(mise activate zsh)"
 
-# --- エイリアス -----------------------------------------------------------
-alias ll='ls -la'
-alias g='git'
-alias gs='git status'
-alias gd='git diff'
-
-# --- zshプラグイン（brew install zsh-autosuggestions zsh-syntax-highlighting）---
-[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] &&
+# --- プラグイン（brew install zsh-autosuggestions zsh-history-substring-search）
+# 入力中、履歴からの候補をグレーで先読み表示（→キーで確定）
+if [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
   source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-[[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] &&
-  source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  ZSH_AUTOSUGGEST_STRATEGY=(history completion)  # 履歴になければ補完候補からも提案
+fi
+# 途中の文字列でも一致する履歴を ↑/↓ で検索（部分一致検索）
+if [[ -f /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]]; then
+  source /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+  bindkey '^[[A' history-substring-search-up
+  bindkey '^[[B' history-substring-search-down
+fi
 
-# --- プロンプト（starshipがあれば使い、なければシンプルなフォールバック）---
+# --- プロンプト（調整は starship/starship.toml で行う） ----------------------
 if command -v starship >/dev/null; then
   eval "$(starship init zsh)"
 else
+  # starship未導入でも最低限のプロンプト（カレントディレクトリ + gitブランチ）
   autoload -Uz vcs_info
   precmd() { vcs_info }
   zstyle ':vcs_info:git:*' formats ' (%b)'
@@ -63,6 +52,8 @@ else
   PROMPT='%F{cyan}%~%f%F{yellow}${vcs_info_msg_0_}%f %# '
 fi
 
-# --- マシン固有・秘密の設定（git管理外） -----------------------------------
-# APIキーやこのマシン専用のPATHなどはリポジトリに入れず、このファイルに書く
+# --- シークレット（APIキー等）: git管理外・chmod 600 -------------------------
+[[ -f "$HOME/.zsh_secrets" ]] && source "$HOME/.zsh_secrets"
+
+# --- マシン固有の設定（git管理外） -------------------------------------------
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
