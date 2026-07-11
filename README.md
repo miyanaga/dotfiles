@@ -23,6 +23,7 @@ macの開発環境設定（zsh・git・WezTerm・macOSシステム設定・Homeb
 
 ```
 dotfiles/
+├── new-mac.md          # 素のMacをセットアップする際の全体手順書
 ├── install.sh          # シンボリックリンクを張るインストーラ
 ├── Brewfile            # Homebrewパッケージ一覧（brew bundleで一括導入）
 ├── zsh/
@@ -62,7 +63,7 @@ brew install zsh-autosuggestions zsh-history-substring-search starship
 
 ## 新しいマシンでの導入手順
 
-前提: Homebrewインストール済み（`~/dev/my-mac-setup/SETUP.md` のフェーズ2まで完了）。
+素のMacを最初からセットアップする場合は **[new-mac.md](new-mac.md)** に全体の段取り（Xcode並行DL、Claude Code、Homebrew、手動ログインToDo等）がある。以下はdotfiles部分のみの手順（前提: Homebrewインストール済み）。
 
 ```bash
 # 1. クローン（リポジトリをGitHub等に置いた場合。まだならAirDrop等でコピーでも可）
