@@ -6,6 +6,7 @@
 #   ~/.ssh のうち: config（とそのInclude先）、configで参照している鍵(+.pub)、
 #                  デフォルト名の鍵(id_rsa/id_ed25519等)、authorized_keys、known_hosts
 #   ~/.zsh_secrets ~/.aws ~/.npmrc（存在すれば）
+#   ~/.config 一式（gcloud/gh/firebase等のアプリ認証。キャッシュ類は除外）
 # 含まれないもの:
 #   configから参照されていない鍵 → 移行しない方針。
 #   整理・削除の前に backup-to-1password.sh でフルバックアップを取っておくこと。
@@ -52,6 +53,9 @@ add .zsh_secrets
 add .aws
 add .npmrc
 
+# アプリケーション設定・認証（~/.config）。キャッシュ・再生成可能なものは下のtarで除外
+add .config
+
 echo "アーカイブに含めるもの:"
 printf '  %s\n' "${FILES[@]}"
 echo
@@ -63,7 +67,15 @@ fi
 OUT="${1:-$HOME/Desktop/secrets-backup-$(date +%Y%m%d).tar.gz.enc}"
 
 echo "パスフレーズを設定します（復元時に同じものを入力します）"
-tar czf - -C "$HOME" --exclude '*.DS_Store' "${FILES[@]}" \
+tar czf - -C "$HOME" \
+  --exclude '*.DS_Store' \
+  --exclude '.config/yarn/global' \
+  --exclude '.config/gcloud/virtenv' \
+  --exclude '.config/gcloud/logs' \
+  --exclude '.config/opencode/node_modules' \
+  --exclude '.config/browseruse/extensions' \
+  --exclude '.config/browseruse/profiles' \
+  "${FILES[@]}" \
   | openssl enc -aes-256-cbc -pbkdf2 -salt -out "$OUT"
 
 echo

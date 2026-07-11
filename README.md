@@ -168,7 +168,8 @@ tar xzf ~/backup.tar.gz -C ~ && rm ~/backup.tar.gz
 ```
 
 export.sh が選ぶのは **configが実際に参照している鍵だけ**です（`IdentityFile` 行とデフォルト名 `id_*` を解析）。
-それに加えて `~/.zsh_secrets` `~/.aws` `~/.npmrc` も同梱します。
+それに加えて `~/.zsh_secrets` `~/.aws` `~/.npmrc`、そして **`~/.config` 一式**（gcloud/gh/firebase等のアプリ認証。
+yarnキャッシュ・gcloudのPython環境などの再生成可能な大物は除外済み）も同梱します。
 configから参照されていない鍵は新マシンに持ち込みません — 必要になったら手順1のバックアップから取り出します。
 
 ### さらにセキュアにするなら（任意・今後の改善候補）

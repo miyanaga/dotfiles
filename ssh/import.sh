@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 新マシンで実行: export.sh で作った暗号化アーカイブから
-# ~/.ssh（configと使用中の鍵）、~/.zsh_secrets、~/.aws、~/.npmrc を復元する。
+# ~/.ssh（configと使用中の鍵）、~/.zsh_secrets、~/.aws、~/.npmrc、
+# ~/.config（アプリ認証。既存の ~/.config には上書きマージされる）を復元する。
 # 既存の ~/.ssh があれば退避してから展開し、パーミッションを整える。
 #
 # 使い方: ./import.sh <ssh-backup-YYYYMMDD.tar.gz.enc>
