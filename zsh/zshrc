@@ -32,6 +32,9 @@ alias cc="claude --dangerously-skip-permissions"
 alias ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"   # Tailscale CLI
 z() { zed -n "$@" }   # Zedを新規ウィンドウで開く
 
+# --- ユーティリティ関数（scode/scursor/szed等） ------------------------------
+[[ -f "$HOME/.zsh_functions" ]] && source "$HOME/.zsh_functions"
+
 # --- プラグイン（brew install zsh-autosuggestions zsh-history-substring-search）
 # 入力中、履歴からの候補をグレーで先読み表示（→キーで確定）
 if [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then

@@ -28,7 +28,8 @@ dotfiles/
 ├── Brewfile            # Homebrewパッケージ一覧（brew bundleで一括導入）
 ├── zsh/
 │   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・部分一致補完・プラグイン）
-│   └── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
+│   ├── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
+│   └── functions.zsh   # → ~/.zsh_functions  ユーティリティ関数（scode/scursor/szed）
 ├── git/
 │   └── gitconfig       # → ~/.gitconfig
 ├── starship/

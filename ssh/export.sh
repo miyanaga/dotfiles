@@ -69,10 +69,11 @@ OUT="${1:-$HOME/Desktop/secrets-backup-$(date +%Y%m%d).tar.gz.enc}"
 echo "パスフレーズを設定します（復元時に同じものを入力します）"
 tar czf - -C "$HOME" \
   --exclude '*.DS_Store' \
+  --exclude '*/node_modules' \
+  --exclude '*/node_modules/*' \
   --exclude '.config/yarn/global' \
   --exclude '.config/gcloud/virtenv' \
   --exclude '.config/gcloud/logs' \
-  --exclude '.config/opencode/node_modules' \
   --exclude '.config/browseruse/extensions' \
   --exclude '.config/browseruse/profiles' \
   --exclude '.config/zed/settings.json' \
