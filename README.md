@@ -35,6 +35,8 @@ dotfiles/
 │   └── starship.toml   # → ~/.config/starship.toml  プロンプトの調整はここ
 ├── wezterm/
 │   └── wezterm.lua     # → ~/.config/wezterm/wezterm.lua
+├── zed/
+│   └── settings.json   # → ~/.config/zed/settings.json
 ├── macos/
 │   └── defaults.sh     # キーボード・マウス等のシステム設定を適用するスクリプト
 └── ssh/
@@ -186,6 +188,9 @@ configから参照されていない鍵は新マシンに持ち込みません �
 
 ## 今後追加するとよいもの
 
-- `zed/settings.json`（Zedの設定。`~/.config/zed/settings.json` をリンク対象に追加）
 - `mise/config.toml`（グローバルのランタイムバージョン固定。`~/.config/mise/config.toml`）
-- Claude Code の `~/.claude/CLAUDE.md` やsettings.json
+- Claude Code の `~/CLAUDE.md` や `~/.claude/settings.json`
+- `~/.config/karabiner/`（キーリマップを使うなら）
+
+VSCodeの設定はdotfilesでも管理できるが、公式の **Settings Sync**（GitHubアカウントでサインイン）の方が
+拡張機能まで同期されるので楽。新マシンではサインインするだけでよい。

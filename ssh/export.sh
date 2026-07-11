@@ -75,6 +75,9 @@ tar czf - -C "$HOME" \
   --exclude '.config/opencode/node_modules' \
   --exclude '.config/browseruse/extensions' \
   --exclude '.config/browseruse/profiles' \
+  --exclude '.config/zed/settings.json' \
+  --exclude '.config/wezterm' \
+  --exclude '.config/starship.toml' \
   "${FILES[@]}" \
   | openssl enc -aes-256-cbc -pbkdf2 -salt -out "$OUT"
 

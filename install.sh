@@ -14,6 +14,7 @@ LINKS=(
   "git/gitconfig:.gitconfig"
   "wezterm/wezterm.lua:.config/wezterm/wezterm.lua"
   "starship/starship.toml:.config/starship.toml"
+  "zed/settings.json:.config/zed/settings.json"
 )
 
 link_one() {

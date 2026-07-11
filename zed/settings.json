@@ -1,0 +1,85 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run the `open default settings` command
+// from the command palette or from `Zed` application menu.
+{
+  "agent_servers": {
+    "codex-acp": {
+      "type": "registry"
+    },
+    "claude-acp": {
+      "type": "registry"
+    }
+  },
+  "title_bar": {
+    "show_menus": false
+  },
+  "window_decorations": "client",
+  "use_system_window_tabs": false,
+  "search": {
+    "button": true
+  },
+  "debugger": {
+    "dock": "left"
+  },
+  "cli_default_open_behavior": "existing_window",
+  "toolbar": {
+    "agent_review": true
+  },
+  "project_panel": {
+    "button": true,
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "right"
+  },
+  "agent": {
+    "new_thread_location": "local_project",
+    "sidebar_side": "left",
+    "button": true,
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "bottom_dock_layout": "full",
+  "git_panel": {
+    "tree_view": false,
+    "dock": "right"
+  },
+  "terminal": {
+    "dock": "bottom"
+  },
+  "outline_panel": {
+    "dock": "left",
+    "default_width": 300.0
+  },
+  "file_types": {
+    "tailwindcss": [
+      "*.css"
+    ]
+  },
+  "indent_guides": {
+    "enabled": false,
+    "line_width": 0,
+    "active_line_width": 0,
+    "coloring": "fixed",
+    "background_coloring": "disabled"
+  },
+  "soft_wrap": "none",
+  "tab_size": 2,
+  "base_keymap": "VSCode",
+  "minimap": {
+    "show": "auto"
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 12.5,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "Gruvbox Dark",
+  },
+}

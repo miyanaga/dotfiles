@@ -30,6 +30,7 @@ command -v mise >/dev/null && eval "$(mise activate zsh)"
 # --- エイリアス -----------------------------------------------------------
 alias cc="claude --dangerously-skip-permissions"
 alias ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"   # Tailscale CLI
+z() { zed -n "$@" }   # Zedを新規ウィンドウで開く
 
 # --- プラグイン（brew install zsh-autosuggestions zsh-history-substring-search）
 # 入力中、履歴からの候補をグレーで先読み表示（→キーで確定）
