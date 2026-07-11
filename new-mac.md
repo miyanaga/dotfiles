@@ -33,6 +33,7 @@
   - [ ] miyanaga@ideamans.com
   - [ ] miyanaga@gmail.com
 - [ ] **Claude Code ログイン**（初回 `claude` 実行時にブラウザが開く）
+- [ ] **Claude / ChatGPT デスクトップアプリにログイン**
 - [ ] **Tailscale ログイン**（メニューバーのアイコンから。SSO利用ならGoogleログインを先に）
 - [ ] **OrbStack 初回起動**（`docker` CLIのセットアップが走る）
 

@@ -14,6 +14,8 @@ cask "google-chrome"            # Googleアカウントのログインに早期�
 cask "wezterm"
 cask "zed"
 cask "orbstack"                 # Docker互換ランタイム（商用利用は有料ライセンス）
+cask "chatgpt"                  # ChatGPTデスクトップアプリ（要手動ログイン）
+cask "claude"                   # Claudeデスクトップアプリ（要手動ログイン）
 cask "1password"                # インストール後に手動ログイン（Emergency KitのSecret Keyが必要）
 cask "1password-cli"            # op コマンド（SSH Agent連携やスクリプトからの秘密情報参照に使う）
 cask "tailscale-app"            # GUI版（旧cask名: tailscale）。インストール後に手動ログイン
