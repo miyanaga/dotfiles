@@ -27,6 +27,9 @@ zstyle ':completion:*' menu select   # Tab連打で候補をメニュー選択
 # --- mise (node / go などのランタイム管理) ----------------------------------
 command -v mise >/dev/null && eval "$(mise activate zsh)"
 
+# --- エイリアス -----------------------------------------------------------
+alias cc="claude --dangerously-skip-permissions"
+
 # --- プラグイン（brew install zsh-autosuggestions zsh-history-substring-search）
 # 入力中、履歴からの候補をグレーで先読み表示（→キーで確定）
 if [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
