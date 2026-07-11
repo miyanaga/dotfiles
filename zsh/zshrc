@@ -1,0 +1,55 @@
+# 対話シェルのたびに読まれる設定
+
+# --- 履歴 ---------------------------------------------------------------
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt SHARE_HISTORY          # 複数ターミナル間で履歴を共有
+setopt HIST_IGNORE_ALL_DUPS   # 重複コマンドは古い方を消す
+setopt HIST_IGNORE_SPACE      # 先頭スペースのコマンドは履歴に残さない
+setopt HIST_REDUCE_BLANKS     # 余分な空白を詰めて保存
+
+# --- 基本オプション -------------------------------------------------------
+setopt AUTO_CD                # ディレクトリ名だけで cd
+setopt AUTO_PUSHD             # cd で自動的に pushd（cd -<Tab> で履歴移動）
+setopt PUSHD_IGNORE_DUPS
+setopt INTERACTIVE_COMMENTS   # コマンドラインで # コメントを許可
+setopt NO_BEEP
+
+bindkey -e                    # emacsキーバインド
+
+# --- 補完 ---------------------------------------------------------------
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'   # 小文字入力で大文字にもマッチ
+zstyle ':completion:*' menu select                     # 候補をメニュー選択
+
+# --- ツール類 -------------------------------------------------------------
+# mise (node / go などのランタイム管理)
+command -v mise >/dev/null && eval "$(mise activate zsh)"
+
+# --- エイリアス -----------------------------------------------------------
+alias ll='ls -la'
+alias g='git'
+alias gs='git status'
+alias gd='git diff'
+
+# --- zshプラグイン（brew install zsh-autosuggestions zsh-syntax-highlighting）---
+[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] &&
+  source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+[[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] &&
+  source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# --- プロンプト（starshipがあれば使い、なければシンプルなフォールバック）---
+if command -v starship >/dev/null; then
+  eval "$(starship init zsh)"
+else
+  autoload -Uz vcs_info
+  precmd() { vcs_info }
+  zstyle ':vcs_info:git:*' formats ' (%b)'
+  setopt PROMPT_SUBST
+  PROMPT='%F{cyan}%~%f%F{yellow}${vcs_info_msg_0_}%f %# '
+fi
+
+# --- マシン固有・秘密の設定（git管理外） -----------------------------------
+# APIキーやこのマシン専用のPATHなどはリポジトリに入れず、このファイルに書く
+[[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"

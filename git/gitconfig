@@ -1,0 +1,11 @@
+[user]
+	email = miyanaga@ideamans.com
+	name = Kunihiko Miyanaga
+[init]
+	defaultBranch = main
+[push]
+	# git push 時に上流ブランチを自動設定（--set-upstream が不要になる）
+	autoSetupRemote = true
+[pull]
+	# pull はマージせず fast-forward のみ（意図しないマージコミットを防ぐ）
+	ff = only
