@@ -38,7 +38,8 @@ dotfiles/
 ├── macos/
 │   └── defaults.sh     # キーボード・マウス等のシステム設定を適用するスクリプト
 └── ssh/
-    ├── export.sh       # 旧マシンで実行: ~/.ssh と ~/.zsh_secrets を暗号化アーカイブに
+    ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
+    ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
     └── import.sh       # 新マシンで実行: アーカイブから復元
 ```
 
@@ -132,21 +133,43 @@ op document get "zsh_secrets" --out-file ~/.zsh_secrets && chmod 600 ~/.zsh_secr
 - 秘密鍵・APIキーは絶対にgitに入れてはいけない（リモートにpushした瞬間に漏洩リスク。履歴から消すのも困難）
 - `~/.ssh/config` にも接続先ホスト名など秘匿すべき情報が多く含まれる
 
-代わりに、パスフレーズ付き暗号化アーカイブで直接運びます:
+代わりに、次の2段構えで運びます。
+
+### 手順1: 全体を1Passwordにバックアップ（整理・移行の前に必ず）
 
 ```bash
-# 旧マシンで
+~/dev/dotfiles/ssh/backup-to-1password.sh
+```
+
+`~/.ssh` 全体（未使用の鍵・退役鍵の `.archives/` も含む）を1Passwordの「書類」として保存します。
+これがセーフティネットになるので、以降は未使用の鍵を気兼ねなく捨てられます。
+前提: 1Passwordアプリ > 設定 > 開発者 > 「1Password CLIと連携」をON。
+
+復元が必要になったら:
+
+```bash
+op document get 'ssh-full-backup-YYYYMMDD' --out-file ~/backup.tar.gz
+tar xzf ~/backup.tar.gz -C ~ && rm ~/backup.tar.gz
+```
+
+### 手順2: 使用中のものだけ暗号化アーカイブで新マシンへ
+
+```bash
+# 旧マシンで（--list で対象を事前確認できる）
+~/dev/dotfiles/ssh/export.sh --list
 ~/dev/dotfiles/ssh/export.sh
 # → デスクトップに secrets-backup-YYYYMMDD.tar.gz.enc ができるので AirDrop で新マシンへ
 
 # 新マシンで
 ~/dev/dotfiles/ssh/import.sh ~/Downloads/secrets-backup-YYYYMMDD.tar.gz.enc
-# → ~/.ssh と ~/.zsh_secrets が復元され、パーミッションも自動調整される
+# → 復元され、パーミッションも自動調整される
 
 # 動作確認後、アーカイブは両マシンから削除
 ```
 
-export.sh は古い退役鍵の置き場（`.archives/`）と `~/.ssh` 内に残っている古いgitリポジトリ（`.git/`）を除外し、現役の鍵とconfigだけを持っていきます。
+export.sh が選ぶのは **configが実際に参照している鍵だけ**です（`IdentityFile` 行とデフォルト名 `id_*` を解析）。
+それに加えて `~/.zsh_secrets` `~/.aws` `~/.npmrc` も同梱します。
+configから参照されていない鍵は新マシンに持ち込みません — 必要になったら手順1のバックアップから取り出します。
 
 ### さらにセキュアにするなら（任意・今後の改善候補）
 
