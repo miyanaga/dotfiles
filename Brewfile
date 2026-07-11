@@ -10,6 +10,7 @@ brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 # brew "zsh-syntax-highlighting"      # コマンドラインの色付け（欲しければ）
 
 # GUIアプリ
+cask "google-chrome"            # Googleアカウントのログインに早期に必要
 cask "wezterm"
 cask "zed"
 cask "orbstack"                 # Docker互換ランタイム（商用利用は有料ライセンス）
