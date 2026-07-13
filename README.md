@@ -79,7 +79,8 @@ cd ~/dev/dotfiles
 ./install.sh
 
 # 3. Homebrewパッケージを一括インストール
-brew bundle --file ~/dev/dotfiles/Brewfile
+# --verbose 必須級: 付けないと先読みダウンロード中の出力が抑制され、無言のまま数十分固まったように見える
+brew bundle --file ~/dev/dotfiles/Brewfile --verbose
 
 # 4. macOSシステム設定を適用（キーボード・マウス速度。要再ログイン）
 ./macos/defaults.sh

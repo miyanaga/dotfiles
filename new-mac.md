@@ -12,7 +12,7 @@
 | 0 | Xcode CLT + App StoreでXcodeのDL開始 | CLT 5〜10分 / Xcode 30分〜 | ダイアログ承認・App Storeサインイン |
 | 1 | Claude Code | 2分 | ブラウザでOAuthログイン |
 | 2 | Homebrew | 5分 | パスワード入力・Enter |
-| 3 | dotfiles導入 + Brewfile一括インストール（mise/WezTerm/Zed/OrbStack）+ SSH移行 | 10分 | AirDropでSSHアーカイブ転送 |
+| 3 | dotfiles導入 + Brewfile一括インストール（mise/WezTerm/Zed/Colima）+ SSH移行 | 10分 | AirDropでSSHアーカイブ転送 |
 | 4 | Xcodeの初期設定 | 10分 | ライセンス同意 |
 
 ポイント: **Xcodeのダウンロード（数十GB）を最初に仕掛けて、待っている間に残りを全部済ませる。**
@@ -35,7 +35,7 @@
 - [ ] **Claude Code ログイン**（初回 `claude` 実行時にブラウザが開く）
 - [ ] **Claude / ChatGPT デスクトップアプリにログイン**
 - [ ] **Tailscale ログイン**（メニューバーのアイコンから。SSO利用ならGoogleログインを先に）
-- [ ] **OrbStack 初回起動**（`docker` CLIのセットアップが走る）
+- [ ] **Colima 初回起動**（`colima start`。GUIもログインも不要だがVMの初回DLに数分。詳細はフェーズ3）
 - [ ] **ライセンス・サブスク系アプリの認証**
   - [ ] CleanShot X（ライセンスキー。1Passwordから）
   - [ ] Microsoft Office（Microsoftアカウントでライセンス認証）
@@ -127,17 +127,22 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 ### dotfiles（zsh / git / WezTerm設定 + Brewfile）
 
 シェルやgitの設定は `~/dev/dotfiles` リポジトリで一元管理する（詳細はそのREADME.md参照）。
-Brewfileにmise・WezTerm・Zed・OrbStack等が定義済みなので、これで一括導入できる。
+Brewfileにmise・WezTerm・Zed・Colima等が定義済みなので、これで一括導入できる。
 
 ```bash
 mkdir -p ~/dev && cd ~/dev
 git clone <dotfilesリポジトリのURL> dotfiles   # またはAirDrop等でコピー
 cd dotfiles
-./install.sh                        # ~/.zshrc 等のシンボリックリンクを張る
-brew bundle --file ./Brewfile       # mise, wezterm, zed, orbstack等を一括インストール
-./macos/defaults.sh                 # キーボード・マウス速度の適用（要再ログイン）
+./install.sh                                  # ~/.zshrc 等のシンボリックリンクを張る
+brew bundle --file ./Brewfile --verbose       # mise, wezterm, zed, colima等を一括インストール
+./macos/defaults.sh                           # キーボード・マウス速度の適用（要再ログイン）
 exec zsh
 ```
+
+> `--verbose` を付ける理由: `brew bundle` は最初に未導入のパッケージを**まとめて先読みダウンロード**するが、
+> 通常はこの間の出力が抑制され、数GB落としている最中でも無言になる（止まったように見える）。
+> `--verbose` を付けるとダウンロードの進捗バーが出る。Officeなど巨大なcaskがあるので数十分かかることもある。
+> 別ターミナルから `du -sh ~/Library/Caches/Homebrew/downloads` で進行を確認してもよい。
 
 ### SSH設定・鍵の移行
 
@@ -155,21 +160,32 @@ mise use -g node@lts go@latest
 node -v && go version
 ```
 
-### Dockerランタイムの選択
+### Dockerランタイム（Colima）
 
-Docker Desktopより軽量な互換ランタイム:
+Docker Desktopの代替として**Colima**を使う（Brewfileに `colima` / `docker` / `docker-compose` が入っている）。
+完全無料のOSSでGUIなし・CLI専用。商用利用でもライセンス費がかからない。
 
-- **OrbStack（推奨）**: 起動が速く省メモリ。`docker` CLI完全互換 + Linux VM + Kubernetes。個人利用は無料、**商用利用は有料ライセンス**
-- **Colima**: 完全無料のOSS。CLIのみで `brew install colima docker docker-compose` → `colima start`。GUIなし
-- **Podman**: Docker互換だがdocker-compose周りで互換性の差が出ることがある
-
-商用利用でライセンス費を避けたい場合はColima:
+`brew bundle` の後、VMの起動と `docker compose` 用の設定が必要:
 
 ```bash
-brew install colima docker docker-compose
-colima start
-docker run hello-world
+# docker compose をプラグインとして認識させる（Homebrew版docker-composeのcaveats）
+mkdir -p ~/.docker
+cat > ~/.docker/config.json <<'JSON'
+{
+  "cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]
+}
+JSON
+
+colima start --cpu 4 --memory 8 --disk 60   # VM起動（初回はLinuxイメージのDLで数分）
+docker run --rm hello-world                 # 動作確認
 ```
+
+VMのリソースは初回の `colima start` の指定がそのまま保存される（変更は `colima stop` → `colima start --memory 16` 等）。
+ログイン時に自動起動させたい場合は `brew services start colima`。
+
+代替:
+- **OrbStack**: 起動が速く省メモリでGUIもあるが、**商用利用は有料ライセンス**（Brewfileにコメントで残してある）
+- **Podman**: Docker互換だがdocker-compose周りで互換性の差が出ることがある
 
 ---
 
@@ -260,7 +276,8 @@ brew --version
 mise doctor
 node -v
 go version
-docker run hello-world
+colima status                                         # VMが起動していること
+docker run --rm hello-world
 xcodebuild -version
 sudo systemsetup -getremotelogin                      # On になっていること
 sudo launchctl print system/com.apple.screensharing   # 画面共有が有効なこと

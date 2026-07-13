@@ -4,6 +4,9 @@
 
 add_newline = false   # プロンプト間の空行なし
 
+[line_break]
+disabled = true       # ❯ を次の行に送らず、1行プロンプトにする
+
 [directory]
 truncation_length = 3   # 表示するディレクトリ階層の深さ
 

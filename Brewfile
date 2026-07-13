@@ -1,10 +1,16 @@
 # brew bundle で一括インストールするパッケージ定義
 # 使い方: brew bundle --file ~/dev/dotfiles/Brewfile
 
+# 独自タップ
+tap "miyanaga/tap"
+
 # CLIツール
 brew "git"
 brew "mise"                     # node / go などのランタイム管理
 brew "starship"                       # プロンプト（調整は starship/starship.toml）
+brew "colima"                   # Docker互換ランタイム（CLI専用・無料OSS。`colima start` でVM起動）
+brew "docker"                   # docker CLI本体（デーモンはColimaのVM側）
+brew "docker-compose"           # docker compose サブコマンド
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
 brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 # brew "zsh-syntax-highlighting"      # コマンドラインの色付け（欲しければ）
@@ -13,7 +19,6 @@ brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 cask "google-chrome"            # Googleアカウントのログインに早期に必要
 cask "wezterm"
 cask "zed"
-cask "orbstack"                 # Docker互換ランタイム（商用利用は有料ライセンス）
 cask "chatgpt"                  # ChatGPTデスクトップアプリ（要手動ログイン）
 cask "claude"                   # Claudeデスクトップアプリ（要手動ログイン）
 cask "1password"                # インストール後に手動ログイン（Emergency KitのSecret Keyが必要）
@@ -30,6 +35,14 @@ cask "raspberry-pi-imager"
 cask "cleanshot"                # CleanShot X（要ライセンスキー入力）
 cask "microsoft-office"         # Word/Excel/PowerPoint一式（要Microsoftアカウントでライセンス認証）
 
+# クリップボード履歴（自前フォーク版）。公証していないビルドなので、
+# 起動前に検疫属性を外す必要がある（現在のHomebrewは --no-quarantine を廃止済み）。
+# postinstall は brew bundle でのインストール/アップグレード時に自動実行される。
+cask "miyanaga/tap/clipy", postinstall: "/usr/bin/xattr -dr com.apple.quarantine /Applications/Clipy.app"
+
+# フォント
+cask "font-ibm-plex-mono"       # WezTermのフォント。Zed内蔵のZed Plex Mono（IBM Plex Mono派生）と揃えるため
+
 # App Store アプリ（mas経由。先にApp StoreでApple IDにサインインしておくこと）
 brew "mas"
 mas "Pixelmator Pro", id: 1289583905
@@ -39,6 +52,4 @@ mas "UTM", id: 1538878817       # App Store版は¥1,500（購入済みなら無
 
 # 代替・オプション（必要ならコメントを外す）
 # cask "claude-code"            # curl版インストーラを使わない場合
-# brew "colima"                 # OrbStackの代わりの無料OSSランタイム
-# brew "docker"
-# brew "docker-compose"
+# cask "orbstack"               # Colimaより高速だが商用利用は有料ライセンス
