@@ -11,6 +11,7 @@ config.color_scheme = 'nord'
 config.hide_tab_bar_if_only_one_tab = true
 config.initial_rows = 40
 config.initial_cols = 120
+config.window_close_confirmation = 'NeverPrompt' -- 終了・ウィンドウを閉じるときに確認しない
 
 -- キーバインド（デフォルトに追加される）
 local act = wezterm.action
