@@ -38,7 +38,7 @@
 - [ ] **Colima 初回起動**（`colima start`。GUIもログインも不要だがVMの初回DLに数分。詳細はフェーズ3）
 - [ ] **ライセンス・サブスク系アプリの認証**
   - [ ] CleanShot X（ライセンスキー。1Passwordから）
-  - [ ] Microsoft Office（Microsoftアカウントでライセンス認証）
+  - [ ] Microsoft Office（Brewfileではコメントアウト。必要なら有効化してMicrosoftアカウントで認証）
   - [ ] djay Pro / Aqua Voice（各アカウントでログイン）
 
 > App Storeアプリ（Pixelmator Pro / djay Pro / UTM）は `brew bundle` 中に `mas` 経由で入るが、
@@ -141,7 +141,7 @@ exec zsh
 
 > `--verbose` を付ける理由: `brew bundle` は最初に未導入のパッケージを**まとめて先読みダウンロード**するが、
 > 通常はこの間の出力が抑制され、数GB落としている最中でも無言になる（止まったように見える）。
-> `--verbose` を付けるとダウンロードの進捗バーが出る。Officeなど巨大なcaskがあるので数十分かかることもある。
+> `--verbose` を付けるとダウンロードの進捗バーが出る。Blenderなど大きなcaskがあるので時間がかかることもある。
 > 別ターミナルから `du -sh ~/Library/Caches/Homebrew/downloads` で進行を確認してもよい。
 
 ### SSH設定・鍵の移行

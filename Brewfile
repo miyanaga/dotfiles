@@ -33,7 +33,8 @@ cask "aqua-voice"               # 音声入力（要ログイン）
 cask "balenaetcher"
 cask "raspberry-pi-imager"
 cask "cleanshot"                # CleanShot X（要ライセンスキー入力）
-cask "microsoft-office"         # Word/Excel/PowerPoint一式（要Microsoftアカウントでライセンス認証）
+# cask "microsoft-office"       # Word/Excel/PowerPoint一式（要Microsoftアカウントでライセンス認証）。
+                                # 巨大（約2GB）でDLに時間がかかるので、必要になったら有効化する
 
 # クリップボード履歴（自前フォーク版）。公証していないビルドなので、
 # 起動前に検疫属性を外す必要がある（現在のHomebrewは --no-quarantine を廃止済み）。

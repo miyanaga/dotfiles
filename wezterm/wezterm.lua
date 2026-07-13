@@ -9,7 +9,7 @@ config.font = wezterm.font('IBM Plex Mono')
 config.font_size = 13.0
 config.color_scheme = 'nord'
 config.hide_tab_bar_if_only_one_tab = true
-config.initial_rows = 60
-config.initial_cols = 200
+config.initial_rows = 40
+config.initial_cols = 120
 
 return config
