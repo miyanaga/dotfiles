@@ -86,17 +86,17 @@ if (( $+functions[compdef] )); then
   compdef _scode_completion szed
 fi
 
-# dev - [一時的] ~/m4pro 配下のディレクトリを、同じ相対パスのまま ~/dev へ移動する
-# 使い方: dev <path> ...   (<path> は ~/m4pro からの相対パス。階層は何段でもよい)
+# dev - [一時的] ~/m4pro/dev 配下のディレクトリを、同じ相対パスのまま ~/dev へ移動する
+# 使い方: dev <path> ...   (<path> は ~/m4pro/dev からの相対パス。階層は何段でもよい)
 #   例: dev plotnium
-#       => ~/m4pro/plotnium を ~/dev/ へ mv
+#       => ~/m4pro/dev/plotnium を ~/dev/ へ mv
 #   例: dev lightfile6/rust-liblightfile6
-#       => ~/m4pro/lightfile6/rust-liblightfile6 を ~/dev/lightfile6/ へ mv
+#       => ~/m4pro/dev/lightfile6/rust-liblightfile6 を ~/dev/lightfile6/ へ mv
 #   例: dev dir1/dir3/project
-#       => ~/m4pro/dir1/dir3/project を ~/dev/dir1/dir3/ へ mv
+#       => ~/m4pro/dev/dir1/dir3/project を ~/dev/dir1/dir3/ へ mv
 function dev() {
   if [ $# -eq 0 ]; then
-    echo "usage: dev <path> ...  (~/m4pro からの相対パス)" >&2
+    echo "usage: dev <path> ...  (~/m4pro/dev からの相対パス)" >&2
     return 1
   fi
 
@@ -105,7 +105,7 @@ function dev() {
     target="${target#./}"
     target="${target%/}"
     if [ -z "$target" ] || [ "${target:0:1}" = "/" ] || [[ "/$target/" == */../* ]]; then
-      echo "dev: invalid path (expected a relative path under ~/m4pro): $target" >&2
+      echo "dev: invalid path (expected a relative path under ~/m4pro/dev): $target" >&2
       return 1
     fi
 
@@ -113,7 +113,7 @@ function dev() {
     parent="${target%/*}"         # 親の相対パス（階層なしなら target 自身と等しくなる）
     [ "$parent" = "$target" ] && parent=""
 
-    src="$HOME/m4pro/$target"
+    src="$HOME/m4pro/dev/$target"
     dst="$HOME/dev${parent:+/$parent}"
 
     if [ ! -d "$src" ]; then
@@ -131,10 +131,10 @@ function dev() {
   done
 }
 
-# dev の補完（~/m4pro 配下のディレクトリを <group>/<project> 形式で候補に出す）
+# dev の補完（~/m4pro/dev 配下のディレクトリを <group>/<project> 形式で候補に出す）
 function _dev_completion() {
-  [ -d "$HOME/m4pro" ] || return 1
-  _files -W "$HOME/m4pro" -/
+  [ -d "$HOME/m4pro/dev" ] || return 1
+  _files -W "$HOME/m4pro/dev" -/
 }
 
 if (( $+functions[compdef] )); then
