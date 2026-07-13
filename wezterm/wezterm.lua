@@ -12,4 +12,14 @@ config.hide_tab_bar_if_only_one_tab = true
 config.initial_rows = 40
 config.initial_cols = 120
 
+-- キーバインド（デフォルトに追加される）
+local act = wezterm.action
+config.keys = {
+  -- Cmd+D で左右分割、Shift+Cmd+D で上下分割
+  { key = 'd', mods = 'CMD',       action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }) },
+  { key = 'd', mods = 'SHIFT|CMD', action = act.SplitVertical({ domain = 'CurrentPaneDomain' }) },
+  -- Cmd+W はタブを閉じるので、Opt+Cmd+W で今のペインだけ閉じる
+  { key = 'w', mods = 'OPT|CMD',   action = act.CloseCurrentPane({ confirm = false }) },
+}
+
 return config

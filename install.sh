@@ -16,6 +16,7 @@ LINKS=(
   "wezterm/wezterm.lua:.config/wezterm/wezterm.lua"
   "starship/starship.toml:.config/starship.toml"
   "zed/settings.json:.config/zed/settings.json"
+  "zed/keymap.json:.config/zed/keymap.json"
 )
 
 link_one() {
@@ -46,4 +47,6 @@ done
 
 echo
 echo "完了。新しいターミナルを開くか 'exec zsh' で反映されます。"
-[[ -d "$BACKUP_DIR" ]] && echo "退避したファイル: $BACKUP_DIR"
+if [[ -d "$BACKUP_DIR" ]]; then
+  echo "退避したファイル: $BACKUP_DIR"
+fi

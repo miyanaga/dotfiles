@@ -41,6 +41,12 @@ apply_all() {
   defaults write -g com.apple.mouse.scaling -float 2.5
   defaults write -g com.apple.trackpad.scaling -float 3
 
+  # --- スクロール方向 ---
+  # 従来向き（ナチュラルなスクロールをOFF）。指を下に動かすと内容が下に動く。
+  # macOSはこの設定をトラックパッドとマウスで分けられない（同じキーを共有している）ため、
+  # 「トラックパッドはナチュラル、マウスのホイールだけ反転」にはサードパーティ製アプリが要る。
+  defaults write -g com.apple.swipescrolldirection -bool false
+
   # --- ショートカット ---
   # ID 27 = 次のウィンドウを操作対象にする（⌘@）、ID 51 = その対エントリ（⌥⌘@）。
   # GUIで変更すると両方書き換わるため、ここでも揃えて設定する。⌘=1048576, ⌥=524288
@@ -102,6 +108,7 @@ verify_all() {
   expect "Tabでフォーカス移動(=2)" "2"   -g AppleKeyboardUIMode
   expect "マウス速度"              "2.5" -g com.apple.mouse.scaling
   expect "トラックパッド速度"      "3"   -g com.apple.trackpad.scaling
+  expect "スクロール: 従来向き(=0)" "0"   -g com.apple.swipescrolldirection
   expect "ダークモード"            "Dark" -g AppleInterfaceStyle
   expect "拡張子を常に表示(=1)"    "1"   -g AppleShowAllExtensions
   expect "Finder: パスバー(=1)"    "1"   com.apple.finder ShowPathbar

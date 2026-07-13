@@ -1,0 +1,16 @@
+// Zed キーバインド（install.shで ~/.config/zed/keymap.json にリンクされる）
+//
+// ベースは settings.json の "base_keymap": "VSCode"。ここに書いたものだけ上書きされる。
+// 既定のキーバインド一覧: Zed メニューの「Settings > Key Bindings」または
+// コマンドパレットの「zed: open default keymap」で確認できる。
+// 書式: { "context": "<適用範囲>", "bindings": { "<キー>": "<アクション>" } }
+[
+  // 例: WezTermと同じ感覚でエディタを分割する
+  // {
+  //   "context": "Workspace",
+  //   "bindings": {
+  //     "cmd-d": "pane::SplitRight",
+  //     "cmd-shift-d": "pane::SplitDown"
+  //   }
+  // }
+]

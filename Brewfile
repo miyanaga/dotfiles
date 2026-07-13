@@ -11,6 +11,8 @@ brew "starship"                       # プロンプト（調整は starship/sta
 brew "colima"                   # Docker互換ランタイム（CLI専用・無料OSS。`colima start` でVM起動）
 brew "docker"                   # docker CLI本体（デーモンはColimaのVM側）
 brew "docker-compose"           # docker compose サブコマンド
+brew "gh"                       # GitHub CLI（gh auth login で認証）
+brew "awscli"                   # AWS CLI v2（aws configure で認証）
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
 brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 # brew "zsh-syntax-highlighting"      # コマンドラインの色付け（欲しければ）
@@ -19,6 +21,7 @@ brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 cask "google-chrome"            # Googleアカウントのログインに早期に必要
 cask "wezterm"
 cask "zed"
+cask "gcloud-cli"               # Google Cloud CLI（旧cask名: google-cloud-sdk）。gcloud init で認証
 cask "chatgpt"                  # ChatGPTデスクトップアプリ（要手動ログイン）
 cask "claude"                   # Claudeデスクトップアプリ（要手動ログイン）
 cask "1password"                # インストール後に手動ログイン（Emergency KitのSecret Keyが必要）

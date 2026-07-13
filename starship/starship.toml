@@ -2,21 +2,30 @@
 # 設定リファレンス: https://starship.rs/ja-JP/config/
 # 変更は保存した瞬間から新しいプロンプトに反映される（再起動不要）
 
+# host:dir $ だけのシンプルな1行プロンプト
+format = '$hostname:$directory$character'
+
 add_newline = false   # プロンプト間の空行なし
 
-[line_break]
-disabled = true       # ❯ を次の行に送らず、1行プロンプトにする
+[hostname]
+ssh_only = false               # ローカルでもホスト名を表示
+format = '[$hostname]($style)'
+style = 'green'
 
 [directory]
-truncation_length = 3   # 表示するディレクトリ階層の深さ
+truncation_length = 1          # カレントディレクトリ名だけ表示
+truncate_to_repo = false       # リポジトリルートまで遡らない
+truncation_symbol = ''         # 省略記号（…/）を付けない
+format = '[$path]($style)'
+style = 'cyan'
 
-[git_branch]
-symbol = ''             # ブランチ記号を省略してシンプルに
+[character]
+success_symbol = '[ \$](white)'
+error_symbol = '[ \$](red)'
 
 # 調整例（コメントを外して使う）:
-# [character]
-# success_symbol = '[❯](green)'   # プロンプト記号を変える
-# [nodejs]
-# disabled = true                  # node バージョン表示を消す
+# [git_branch]                   # gitブランチを右に足す
+# symbol = ''
+# → format を '$hostname:$directory$git_branch$character' にする
 # [cmd_duration]
-# min_time = 5000                  # 5秒以上かかったコマンドだけ実行時間を表示
+# min_time = 5000                # 5秒以上かかったコマンドだけ実行時間を表示

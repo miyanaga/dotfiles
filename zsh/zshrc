@@ -32,6 +32,24 @@ alias cc="claude --dangerously-skip-permissions"
 alias ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"   # Tailscale CLI
 z() { zed -n "$@" }   # Zedを新規ウィンドウで開く
 
+# w [dir] - 指定ディレクトリ（省略時はカレント）でWezTermを新規ウィンドウで開く
+w() {
+  local dir="${1:-$PWD}"
+  if [[ ! -d "$dir" ]]; then
+    echo "w: not a directory: $dir" >&2
+    return 1
+  fi
+  dir="${dir:A}"   # 絶対パスに正規化
+  if [[ -n "$WEZTERM_UNIX_SOCKET" ]]; then
+    # WezTerm内から: 既存プロセスに新規ウィンドウを生やす
+    wezterm cli spawn --new-window --cwd "$dir" >/dev/null
+  else
+    # WezTerm外から: GUIを新規に起動する
+    wezterm start --cwd "$dir" >/dev/null 2>&1 &!
+  fi
+}
+(( $+functions[compdef] )) && compdef '_files -/' w
+
 # --- ユーティリティ関数（scode/scursor/szed等） ------------------------------
 [[ -f "$HOME/.zsh_functions" ]] && source "$HOME/.zsh_functions"
 

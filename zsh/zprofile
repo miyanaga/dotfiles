@@ -7,3 +7,9 @@ fi
 
 # Claude Code などが入る ~/.local/bin
 export PATH="$HOME/.local/bin:$PATH"
+
+# gcloud components install で追加したコンポーネント（gke-gcloud-auth-plugin など）の置き場所。
+# gcloud/gsutil/bq 本体は brew が /opt/homebrew/bin にリンクするので、これが無くても動く。
+if [[ -d /opt/homebrew/share/google-cloud-sdk/bin ]]; then
+  export PATH="/opt/homebrew/share/google-cloud-sdk/bin:$PATH"
+fi

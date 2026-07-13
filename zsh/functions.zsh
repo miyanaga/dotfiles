@@ -85,3 +85,58 @@ if (( $+functions[compdef] )); then
   compdef _scode_completion scursor
   compdef _scode_completion szed
 fi
+
+# dev - [一時的] ~/m4pro 配下のディレクトリを、同じ相対パスのまま ~/dev へ移動する
+# 使い方: dev <path> ...   (<path> は ~/m4pro からの相対パス。階層は何段でもよい)
+#   例: dev plotnium
+#       => ~/m4pro/plotnium を ~/dev/ へ mv
+#   例: dev lightfile6/rust-liblightfile6
+#       => ~/m4pro/lightfile6/rust-liblightfile6 を ~/dev/lightfile6/ へ mv
+#   例: dev dir1/dir3/project
+#       => ~/m4pro/dir1/dir3/project を ~/dev/dir1/dir3/ へ mv
+function dev() {
+  if [ $# -eq 0 ]; then
+    echo "usage: dev <path> ...  (~/m4pro からの相対パス)" >&2
+    return 1
+  fi
+
+  local target parent name src dst
+  for target in "$@"; do
+    target="${target#./}"
+    target="${target%/}"
+    if [ -z "$target" ] || [ "${target:0:1}" = "/" ] || [[ "/$target/" == */../* ]]; then
+      echo "dev: invalid path (expected a relative path under ~/m4pro): $target" >&2
+      return 1
+    fi
+
+    name="${target##*/}"          # 最後の要素
+    parent="${target%/*}"         # 親の相対パス（階層なしなら target 自身と等しくなる）
+    [ "$parent" = "$target" ] && parent=""
+
+    src="$HOME/m4pro/$target"
+    dst="$HOME/dev${parent:+/$parent}"
+
+    if [ ! -d "$src" ]; then
+      echo "dev: not found: $src" >&2
+      return 1
+    fi
+    if [ -e "$dst/$name" ]; then
+      echo "dev: already exists: $dst/$name" >&2
+      return 1
+    fi
+
+    mkdir -p "$dst" || return 1
+    mv "$src" "$dst/" || return 1
+    echo "dev: $src -> $dst/$name"
+  done
+}
+
+# dev の補完（~/m4pro 配下のディレクトリを <group>/<project> 形式で候補に出す）
+function _dev_completion() {
+  [ -d "$HOME/m4pro" ] || return 1
+  _files -W "$HOME/m4pro" -/
+}
+
+if (( $+functions[compdef] )); then
+  compdef _dev_completion dev
+fi
