@@ -37,6 +37,9 @@ apply_all() {
   defaults write -g com.apple.keyboard.fnState -bool true # F1〜F12を輝度等でなく標準のファンクションキーに
   defaults write -g AppleKeyboardUIMode -int 2             # キーボードナビゲーション（Tabでボタン等にもフォーカス移動）
 
+  # --- 日本語入力 ---
+  defaults write com.apple.inputmethod.Kotoeri JIMPrefLiveConversionKey -bool false  # ライブ変換をオフ（スペースキーで変換）
+
   # --- ポインタ速度（旧マシンの実測値をそのまま移植） ---
   defaults write -g com.apple.mouse.scaling -float 2.5
   defaults write -g com.apple.trackpad.scaling -float 3
@@ -106,6 +109,7 @@ verify_all() {
   expect "長押しリピート(=1で有効)" "0"   -g ApplePressAndHoldEnabled
   expect "F1〜F12を標準キーに(=1)" "1"   -g com.apple.keyboard.fnState
   expect "Tabでフォーカス移動(=2)" "2"   -g AppleKeyboardUIMode
+  expect "ライブ変換(=1で有効)"    "0"   com.apple.inputmethod.Kotoeri JIMPrefLiveConversionKey
   expect "マウス速度"              "2.5" -g com.apple.mouse.scaling
   expect "トラックパッド速度"      "3"   -g com.apple.trackpad.scaling
   expect "スクロール: 従来向き(=0)" "0"   -g com.apple.swipescrolldirection
@@ -128,6 +132,8 @@ if [[ "$CHECK_ONLY" == false ]]; then
   /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
   # Finder・Dock・メニューバー時計は再起動して設定を読み直させる
   killall Finder Dock ControlCenter 2>/dev/null || true
+  # 日本語IMも再起動して設定を読み直させる（自動で再起動される）
+  killall JapaneseIM-RomajiTyping 2>/dev/null || true
   echo "適用しました。"
 fi
 
