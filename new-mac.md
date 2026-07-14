@@ -162,13 +162,13 @@ node -v && go version
 
 ### Dockerランタイム（Colima）
 
-Docker Desktopの代替として**Colima**を使う（Brewfileに `colima` / `docker` / `docker-compose` が入っている）。
+Docker Desktopの代替として**Colima**を使う（Brewfileに `colima` / `docker` / `docker-compose` / `docker-buildx` が入っている）。
 完全無料のOSSでGUIなし・CLI専用。商用利用でもライセンス費がかからない。
 
-`brew bundle` の後、VMの起動と `docker compose` 用の設定が必要:
+`brew bundle` の後、VMの起動と `docker compose` / `docker buildx` 用の設定が必要:
 
 ```bash
-# docker compose をプラグインとして認識させる（Homebrew版docker-composeのcaveats）
+# compose / buildx をプラグインとして認識させる（Homebrew版のcaveats）
 mkdir -p ~/.docker
 cat > ~/.docker/config.json <<'JSON'
 {
@@ -178,6 +178,7 @@ JSON
 
 colima start --cpu 4 --memory 8 --disk 60   # VM起動（初回はLinuxイメージのDLで数分）
 docker run --rm hello-world                 # 動作確認
+docker buildx version                       # buildxが認識されていること
 ```
 
 VMのリソースは初回の `colima start` の指定がそのまま保存される（変更は `colima stop` → `colima start --memory 16` 等）。

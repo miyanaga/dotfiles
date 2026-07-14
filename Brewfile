@@ -11,6 +11,7 @@ brew "starship"                       # プロンプト（調整は starship/sta
 brew "colima"                   # Docker互換ランタイム（CLI専用・無料OSS。`colima start` でVM起動）
 brew "docker"                   # docker CLI本体（デーモンはColimaのVM側）
 brew "docker-compose"           # docker compose サブコマンド
+brew "docker-buildx"            # docker buildx サブコマンド（マルチアーキビルド等）
 brew "gh"                       # GitHub CLI（gh auth login で認証）
 brew "awscli"                   # AWS CLI v2（aws configure で認証）
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
