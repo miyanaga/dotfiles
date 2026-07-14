@@ -17,6 +17,7 @@ LINKS=(
   "starship/starship.toml:.config/starship.toml"
   "zed/settings.json:.config/zed/settings.json"
   "zed/keymap.json:.config/zed/keymap.json"
+  "vscode/keybindings.json:Library/Application Support/Code/User/keybindings.json"
 )
 
 link_one() {

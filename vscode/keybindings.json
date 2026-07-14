@@ -1,0 +1,9 @@
+// VSCodeのキーバインド上書き（デフォルトへの追加・変更のみ記述）
+[
+  // Cmd+D: ターミナルにフォーカスがあるとき左右分割
+  {
+    "key": "cmd+d",
+    "command": "workbench.action.terminal.split",
+    "when": "terminalFocus"
+  }
+]

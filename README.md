@@ -38,6 +38,8 @@ dotfiles/
 │   └── wezterm.lua     # → ~/.config/wezterm/wezterm.lua
 ├── zed/
 │   └── settings.json   # → ~/.config/zed/settings.json
+├── vscode/
+│   └── keybindings.json # → ~/Library/Application Support/Code/User/keybindings.json
 ├── macos/
 │   └── defaults.sh     # キーボード・Finder・Dock等のシステム設定を適用・検証するスクリプト
 └── ssh/
