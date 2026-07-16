@@ -30,7 +30,19 @@ command -v mise >/dev/null && eval "$(mise activate zsh)"
 # --- エイリアス -----------------------------------------------------------
 alias cc="claude --dangerously-skip-permissions"
 alias ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"   # Tailscale CLI
-z() { zed -n "$@" }   # Zedを新規ウィンドウで開く
+# z [path ...] - Zedを新規ウィンドウで開く（パスが存在しなければ mkdir -p で作成）
+z() {
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == -* ]] && continue          # オプションはスキップ
+    if [[ ! -e "$arg" ]]; then
+      mkdir -p "$arg" || return 1
+      echo "z: created $arg"
+    fi
+  done
+  zed -n "$@"
+}
+(( $+functions[compdef] )) && compdef '_files -/' z
 
 # w [dir] - 指定ディレクトリ（省略時はカレント）でWezTermを新規ウィンドウで開く
 w() {
