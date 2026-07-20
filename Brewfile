@@ -14,6 +14,7 @@ brew "docker-compose"           # docker compose サブコマンド
 brew "docker-buildx"            # docker buildx サブコマンド（マルチアーキビルド等）
 brew "gh"                       # GitHub CLI（gh auth login で認証）
 brew "awscli"                   # AWS CLI v2（aws configure で認証）
+brew "duckdb"                   # 組み込み型の分析用SQLデータベース（CSV/Parquet等を直接クエリできる）
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
 brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 # brew "zsh-syntax-highlighting"      # コマンドラインの色付け（欲しければ）
