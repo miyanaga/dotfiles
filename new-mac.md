@@ -135,7 +135,7 @@ git clone <dotfilesリポジトリのURL> dotfiles   # またはAirDrop等でコ
 cd dotfiles
 ./install.sh                                  # ~/.zshrc 等のシンボリックリンクを張る
 brew bundle --file ./Brewfile --verbose       # mise, wezterm, zed, colima等を一括インストール
-./macos/defaults.sh                           # キーボード・Finder・Dock等の適用（一部は要再ログイン）
+./macos/defaults.sh                           # キーボード・Finder・Dock・電源等の適用（sudoを聞かれる／一部は要再ログイン）
 exec zsh
 ```
 

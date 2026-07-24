@@ -4,6 +4,9 @@
 #   ./macos/defaults.sh          適用して検証（何度実行しても安全）
 #   ./macos/defaults.sh --check  適用せず、現在値が期待どおりかの検証だけ
 #
+# 電源設定(pmset)の変更にroot権限が要るため、適用時のみsudoのパスワードを聞かれる。
+# --check は読むだけなのでsudo不要。
+#
 # 注意: キーボードのリピート速度はGUIスライダーの最速値を超えているため、
 #       システム設定のキーボード画面でスライダーを動かすと上書きされる。
 #       上書きされたらこのスクリプトを再実行すれば戻る（--check で検知できる）。
@@ -73,33 +76,52 @@ apply_all() {
 
   # --- メニューバー時計 ---
   defaults write com.apple.menuextra.clock ShowDate -int 0  # 日付は「スペースに応じて表示」
+
+  # --- 電源とスリープ（電源アダプタ接続時のみ。バッテリー時は既定のまま） ---
+  # 画面は消えてよいが、本体はスリープさせない。SSH・同期・長時間のビルドが
+  # 席を外している間に止まらないようにするため。
+  # `-c` = charger(電源アダプタ)、`-b` = battery。ここでは -c だけを変える。
+  echo "電源設定(pmset)の変更にsudoが必要です。"
+  sudo pmset -c sleep 0          # システムスリープしない（0=しない）
+  sudo pmset -c displaysleep 10  # 画面だけ10分でオフ（ロックはスクリーンセーバ側の設定）
+  # disksleep は既定のまま（10分）。ディスクが止まってもシステムはスリープしない。
 }
 
 # --- 検証 -------------------------------------------------------------------
 FAILED=0
 
-expect() {  # expect <説明> <期待値> <defaults read の引数...>
-  local label="$1" want="$2"; shift 2
-  local got
-  got="$(defaults read "$@" 2>/dev/null || echo '(未設定)')"
+judge() {  # judge <説明> <期待値> <実際の値> [期待値の表示文字列]
+  local label="$1" want="$2" got="$3" show="${4:-$2}"
   if [[ "$got" == "$want" ]]; then
     printf '  ok    %s: %s\n' "$label" "$got"
   else
-    printf '  NG    %s: %s (期待: %s)\n' "$label" "$got" "$want"
+    printf '  NG    %s: %s (期待: %s)\n' "$label" "$got" "$show"
     FAILED=$((FAILED + 1))
   fi
+}
+
+expect() {  # expect <説明> <期待値> <defaults read の引数...>
+  local label="$1" want="$2"; shift 2
+  judge "$label" "$want" "$(defaults read "$@" 2>/dev/null || echo '(未設定)')"
 }
 
 expect_at_hotkey() {  # expect_at_hotkey <説明> <ホットキーID>
   local label="$1" id="$2" keycode
   keycode="$(/usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:$id:value:parameters:1" \
     ~/Library/Preferences/com.apple.symbolichotkeys.plist 2>/dev/null || echo '(未設定)')"
-  if [[ "$keycode" == "33" ]]; then
-    printf '  ok    %s: keycode %s\n' "$label" "$keycode"
-  else
-    printf '  NG    %s: %s (期待: keycode 33)\n' "$label" "$keycode"
-    FAILED=$((FAILED + 1))
-  fi
+  judge "$label" "33" "$keycode" "keycode 33"
+}
+
+expect_pmset_ac() {  # expect_pmset_ac <説明> <期待値> <pmsetのキー名>
+  # `pmset -g custom` の「AC Power:」ブロックだけを見る（バッテリー時の値は対象外）。
+  # 読むだけならsudo不要。
+  local label="$1" want="$2" key="$3" got
+  got="$(pmset -g custom | awk -v key="$key" '
+    /^AC Power:/ { in_ac = 1; next }
+    /^[^ ]/      { in_ac = 0 }
+    in_ac && $1 == key { print $2; exit }
+  ')"
+  judge "$label" "$want" "${got:-(未設定)}"
 }
 
 verify_all() {
@@ -121,6 +143,8 @@ verify_all() {
   expect "Dock: 自動的に隠す(=1)"  "1"   com.apple.dock autohide
   expect "Dock: アイコンサイズ"    "69"  com.apple.dock tilesize
   expect "時計: 日付表示モード"    "0"   com.apple.menuextra.clock ShowDate
+  expect_pmset_ac "電源時: システムスリープ(=0でしない)" "0"  sleep
+  expect_pmset_ac "電源時: 画面オフまでの分"             "10" displaysleep
   expect_at_hotkey "⌘@ でウィンドウ切り替え"    27
   expect_at_hotkey "⌥⌘@ でウィンドウ切り替え" 51
 }

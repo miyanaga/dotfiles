@@ -41,7 +41,7 @@ dotfiles/
 ├── vscode/
 │   └── keybindings.json # → ~/Library/Application Support/Code/User/keybindings.json
 ├── macos/
-│   └── defaults.sh     # キーボード・Finder・Dock等のシステム設定を適用・検証するスクリプト
+│   └── defaults.sh     # キーボード・Finder・Dock・電源等のシステム設定を適用・検証するスクリプト
 └── ssh/
     ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
     ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
@@ -84,7 +84,8 @@ cd ~/dev/dotfiles
 # --verbose 必須級: 付けないと先読みダウンロード中の出力が抑制され、無言のまま数十分固まったように見える
 brew bundle --file ~/dev/dotfiles/Brewfile --verbose
 
-# 4. macOSシステム設定を適用（キーボード・Finder・Dock等。一部は要再ログイン）
+# 4. macOSシステム設定を適用（キーボード・Finder・Dock・電源等。一部は要再ログイン）
+#    電源設定(pmset)の変更でsudoのパスワードを聞かれる
 ./macos/defaults.sh
 
 # 5. シェルを再起動
