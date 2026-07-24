@@ -83,8 +83,9 @@ apply_all() {
   # `-c` = charger(電源アダプタ)、`-b` = battery。ここでは -c だけを変える。
   echo "電源設定(pmset)の変更にsudoが必要です。"
   sudo pmset -c sleep 0          # システムスリープしない（0=しない）
+  sudo pmset -c disksleep 0      # ディスクもスリープさせない
   sudo pmset -c displaysleep 10  # 画面だけ10分でオフ（ロックはスクリーンセーバ側の設定）
-  # disksleep は既定のまま（10分）。ディスクが止まってもシステムはスリープしない。
+  sudo pmset -c womp 1           # ネットワークアクセスでスリープ解除（スリープしない設定でも念のため）
 }
 
 # --- 検証 -------------------------------------------------------------------
@@ -144,7 +145,9 @@ verify_all() {
   expect "Dock: アイコンサイズ"    "69"  com.apple.dock tilesize
   expect "時計: 日付表示モード"    "0"   com.apple.menuextra.clock ShowDate
   expect_pmset_ac "電源時: システムスリープ(=0でしない)" "0"  sleep
+  expect_pmset_ac "電源時: ディスクスリープ(=0でしない)" "0"  disksleep
   expect_pmset_ac "電源時: 画面オフまでの分"             "10" displaysleep
+  expect_pmset_ac "電源時: ネットワークでスリープ解除(=1)" "1" womp
   expect_at_hotkey "⌘@ でウィンドウ切り替え"    27
   expect_at_hotkey "⌥⌘@ でウィンドウ切り替え" 51
 }
