@@ -69,6 +69,11 @@ apply_all() {
   defaults write com.apple.finder ShowPathbar -bool true         # パスバーを表示
   defaults write com.apple.finder FXPreferredViewStyle -string Nlsv  # デフォルトをリスト表示に
   defaults write com.apple.finder FXDefaultSearchScope -string SCcf  # 検索範囲を「現在のフォルダ」に
+  # 新規Finderウィンドウの表示先を ~/Downloads に。
+  # PfLo = 任意の場所（NewWindowTargetPath で指定）。Home=PfHm, Desktop=PfDe のような
+  # 専用コードがDownloadsには無いため、PfLo + URL で指定する。
+  defaults write com.apple.finder NewWindowTarget -string PfLo
+  defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/Downloads/"
 
   # --- Dock ---
   defaults write com.apple.dock autohide -bool true
@@ -141,6 +146,8 @@ verify_all() {
   expect "Finder: パスバー(=1)"    "1"   com.apple.finder ShowPathbar
   expect "Finder: リスト表示"      "Nlsv" com.apple.finder FXPreferredViewStyle
   expect "Finder: 検索は現在のフォルダ" "SCcf" com.apple.finder FXDefaultSearchScope
+  expect "Finder: 新規ウィンドウの種別" "PfLo" com.apple.finder NewWindowTarget
+  expect "Finder: 新規ウィンドウの場所" "file://${HOME}/Downloads/" com.apple.finder NewWindowTargetPath
   expect "Dock: 自動的に隠す(=1)"  "1"   com.apple.dock autohide
   expect "Dock: アイコンサイズ"    "69"  com.apple.dock tilesize
   expect "時計: 日付表示モード"    "0"   com.apple.menuextra.clock ShowDate
