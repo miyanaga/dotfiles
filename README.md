@@ -41,7 +41,8 @@ dotfiles/
 ├── vscode/
 │   └── keybindings.json # → ~/Library/Application Support/Code/User/keybindings.json
 ├── macos/
-│   └── defaults.sh     # キーボード・Finder・Dock・電源等のシステム設定を適用・検証するスクリプト
+│   ├── defaults.sh         # キーボード・Finder・Dock・電源等のシステム設定を適用・検証するスクリプト
+│   └── reset-tailscale.sh  # Tailscaleのデバイス身元を完全リセット（Time Machine移行後の重複対策）
 └── ssh/
     ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
     ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
@@ -190,6 +191,7 @@ configから参照されていない鍵は新マシンに持ち込みません �
 - **preztoは廃止**。旧マシンでこの構成に切り替える場合は `./install.sh` 実行後（旧symlinkは自動退避される）、`rm -rf ~/.zprezto` と残った `~/.zpreztorc` 等のリンクを削除してよい。ただし旧マシンのprezto版zshrcにはmise未対応のPATH設定（asdf/pnpm/gcloud等）が残っているため、切り替えは新マシンの安定後でよい
 - 旧マシンの `~/.ssh` 内には秘密鍵をコミットした古いgitリポジトリ（`~/.ssh/.git`、2021年から未更新・リモートなし）が残っている。**絶対にリモートを追加してpushしないこと**。不要なら `rm -rf ~/.ssh/.git ~/.ssh/.archives` で撤去してよい（撤去前に必要な鍵が現役ディレクトリにあるか確認）
 - `macos/defaults.sh` のキーリピート速度はGUIの最速値を超えた設定のため、システム設定のキーボード画面でスライダーを触ると上書きされる。その場合は再度スクリプトを実行
+- **Time Machineで移行するとTailscaleが旧Macと重複する**。移行元の machine key（デバイス身元）まで複製されるため、admin上で旧Macと同じデバイス扱いになり同じ100.x IPを奪い合う（"Duplicate node key"）。`brew uninstall` や `rm -rf /Library/Tailscale` では直らない — 身元は **System keychain の `tailscale-*`**（`tailscale-current-profile`/`tailscale-profiles`/`tailscale-id-profile-*`等）に保存されているため。`./macos/reset-tailscale.sh`（`--list` で対象確認）で全消し → 再起動 → 再ログインすると、新しい身元・新IPで別デバイスとして登録し直せる。詳細はスクリプト冒頭のコメントと [new-mac.md](new-mac.md) を参照
 
 ## 今後追加するとよいもの
 

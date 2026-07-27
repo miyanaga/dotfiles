@@ -35,6 +35,10 @@
 - [ ] **Claude Code ログイン**（初回 `claude` 実行時にブラウザが開く）
 - [ ] **Claude / ChatGPT デスクトップアプリにログイン**
 - [ ] **Tailscale ログイン**（メニューバーのアイコンから。SSO利用ならGoogleログインを先に）
+  - ⚠️ Time Machine移行だと旧Macの machine key を引き継いでしまい、admin上で旧Macと
+    同じデバイス扱い（同じ100.x IP・"Duplicate node key"）になって競合する。
+    その場合は `./macos/reset-tailscale.sh` で身元を全消し → 再起動 → ログインし直す。
+    （keychainの `tailscale-*` を消すのが本丸。`brew uninstall` や `rm -rf /Library/Tailscale` だけでは直らない）
 - [ ] **Colima 初回起動**（`colima start`。GUIもログインも不要だがVMの初回DLに数分。詳細はフェーズ3）
 - [ ] **ライセンス・サブスク系アプリの認証**
   - [ ] CleanShot X（ライセンスキー。1Passwordから）
