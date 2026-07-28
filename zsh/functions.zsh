@@ -140,3 +140,18 @@ function _dev_completion() {
 if (( $+functions[compdef] )); then
   compdef _dev_completion dev
 fi
+
+# colima - start/restart の直後にデータディスク(ext4)の健全性を自動チェックするラッパー
+#
+# Macの異常終了でVMのデータディスクが壊れると、containerdが panic して docker が
+# 使えなくなる。しかも壊れたまま使い続けると被害が累積するので、起動のたびに
+# 黙って確認する（問題がなければ何も出力しない。実体は dotfiles/colima/fsck.sh）。
+# 停止し忘れ自体は LaunchAgent (colima-graceful-stop) が防いでいる。
+function colima() {
+  command colima "$@"
+  local rc=$?
+  if [[ $rc -eq 0 && ( "${1:-}" == "start" || "${1:-}" == "restart" ) ]]; then
+    (( $+commands[colima-fsck] )) && colima-fsck --quiet
+  fi
+  return $rc
+}

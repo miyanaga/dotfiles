@@ -29,7 +29,7 @@ dotfiles/
 ├── zsh/
 │   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・部分一致補完・プラグイン）
 │   ├── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
-│   └── functions.zsh   # → ~/.zsh_functions  ユーティリティ関数（scode/scursor/szed）
+│   └── functions.zsh   # → ~/.zsh_functions  ユーティリティ関数（scode/scursor/szed/dev/colima）
 ├── git/
 │   └── gitconfig       # → ~/.gitconfig
 ├── starship/
@@ -43,6 +43,10 @@ dotfiles/
 ├── macos/
 │   ├── defaults.sh         # キーボード・Finder・Dock・電源等のシステム設定を適用・検証するスクリプト
 │   └── reset-tailscale.sh  # Tailscaleのデバイス身元を完全リセット（Time Machine移行後の重複対策）
+├── colima/             # ColimaのVMを壊さないための仕掛け（下記「Colimaの保護」参照）
+│   ├── graceful-stop.sh  # → ~/.local/bin/colima-graceful-stop  ログアウト時にcolima stopする常駐スクリプト
+│   ├── fsck.sh           # → ~/.local/bin/colima-fsck  データディスクの健全性チェック・修復
+│   └── com.miyanaga.colima-graceful-stop.plist  # → ~/Library/LaunchAgents/  上記の常駐定義
 └── ssh/
     ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
     ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
@@ -77,7 +81,7 @@ brew install zsh-autosuggestions zsh-history-substring-search starship
 mkdir -p ~/dev && cd ~/dev
 git clone <このリポジトリのURL> dotfiles
 
-# 2. シンボリックリンクを張る
+# 2. シンボリックリンクを張る（LaunchAgentの登録もここで行われる）
 cd ~/dev/dotfiles
 ./install.sh
 
@@ -115,6 +119,74 @@ cd ~/dev/dotfiles && git pull
 ```bash
 brew bundle dump --force --file ~/dev/dotfiles/Brewfile
 ```
+
+## Colimaの保護（`colima stop` の自動化とデータディスクの点検）
+
+### なぜ必要か
+
+Colimaのdockerイメージは、VM内の専用データディスク（ext4, `/dev/vdb1`）に載っている。
+**`colima stop` を経ずにMacを落とすとここが壊れる。** 症状はcontainerdが起動しなくなること:
+
+```
+panic: freepages: failed to get all reachable pages (page 91: multiple references)
+```
+
+2026-07-26にこれで全イメージをロストした。そのときの `e2fsck -fn` の結果は
+multiply-claimed blockが**10,161件**で、e2fsckが `aborted` するレベル。
+異常終了を重ねるほど悪化する（7/15と7/26の2回で累積した）ため、早期検知も要る。
+
+毎回手で `colima stop` するのを忘れないのは無理なので、機械にやらせる。
+
+### 仕組み（2段構え）
+
+| 層 | 実体 | 役割 |
+|---|---|---|
+| ① 停止の自動化 | LaunchAgent `com.miyanaga.colima-graceful-stop` | ログアウト/シャットダウン時にlaunchdが送るSIGTERMをtrapして `colima stop` を実行 |
+| ② 事後の点検 | `colima-fsck`（zshの `colima` ラッパーが `start`/`restart` 後に自動実行） | データディスクのFS Error countとcontainerd/dockerの稼働を確認。正常なら無音 |
+
+①は `install.sh` が自動で登録する。②は問題を見つけたときだけ警告を出す。
+
+**①でも防げないもの**: 電源断・カーネルパニック・電源ボタン長押し。
+どんなフックでも捕まえられないので、②で早期に気づいて被害の累積を止める。
+
+### 使い方
+
+```bash
+colima-fsck              # 健全性チェックのみ（読み取りのみ・無害）
+colima-fsck --repair     # e2fsck -fy で修復（サービス停止とcolima再起動を伴う）
+colima-fsck --reformat   # データディスクを作り直す（最終手段・イメージは全消失）
+colima-fsck --help       # 全オプション
+```
+
+`--reformat` はラベルとUUIDを維持して `mkfs.ext4` するので、colima側の設定変更は不要。
+イメージは消えるが再pull/再ビルドで戻る（volumeを使っている場合は事前に退避すること）。
+
+判断の目安:
+
+- **FSにエラーが出ている** → `--repair`
+- **containerdが `panic: freepages`** → メタデータDB(bbolt)の内部破損。ファイルの中身が壊れて
+  いるので**e2fsckでは直らない**。`--reformat` が確実（`colima-fsck` がこれを判別して案内する）
+
+### 動作確認とトラブルシュート
+
+```bash
+# 常駐しているか
+launchctl print "gui/$(id -u)/com.miyanaga.colima-graceful-stop" | grep -E "state|pid"
+
+# 停止処理のログ（SIGTERMを受けた記録とcolima stopの結果が残る）
+tail -20 ~/Library/Logs/colima-graceful-stop.log
+
+# ログアウトを模擬してテストする（bootoutはSIGTERMを送るので実際の経路を通る）
+launchctl bootout "gui/$(id -u)/com.miyanaga.colima-graceful-stop"   # → colimaが停止する
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.miyanaga.colima-graceful-stop.plist
+```
+
+plistを書き換えたときは上記の bootout → bootstrap で読み直す。
+
+**注意**: launchd配下のPATHは `/usr/bin:/bin:/usr/sbin:/sbin` しかない。
+`graceful-stop.sh` でHomebrewのbinを明示的に通しているのは、これを忘れると
+colimaが `limactl` を見つけられず `dependency check failed for VM: lima not found`
+で停止に失敗するため（ログには出るが、気づかないまま毎回壊れることになる）。
 
 ## シークレットとマシン固有設定（git管理外の2ファイル）
 
@@ -192,6 +264,7 @@ configから参照されていない鍵は新マシンに持ち込みません �
 - 旧マシンの `~/.ssh` 内には秘密鍵をコミットした古いgitリポジトリ（`~/.ssh/.git`、2021年から未更新・リモートなし）が残っている。**絶対にリモートを追加してpushしないこと**。不要なら `rm -rf ~/.ssh/.git ~/.ssh/.archives` で撤去してよい（撤去前に必要な鍵が現役ディレクトリにあるか確認）
 - `macos/defaults.sh` のキーリピート速度はGUIの最速値を超えた設定のため、システム設定のキーボード画面でスライダーを触ると上書きされる。その場合は再度スクリプトを実行
 - **Time Machineで移行するとTailscaleが旧Macと重複する**。移行元の machine key（デバイス身元）まで複製されるため、admin上で旧Macと同じデバイス扱いになり同じ100.x IPを奪い合う（"Duplicate node key"）。`brew uninstall` や `rm -rf /Library/Tailscale` では直らない — 身元は **System keychain の `tailscale-*`**（`tailscale-current-profile`/`tailscale-profiles`/`tailscale-id-profile-*`等）に保存されているため。`./macos/reset-tailscale.sh`（`--list` で対象確認）で全消し → 再起動 → 再ログインすると、新しい身元・新IPで別デバイスとして登録し直せる。詳細はスクリプト冒頭のコメントと [new-mac.md](new-mac.md) を参照
+- `install.sh` は登録済みのLaunchAgentには触らない（`launchctl bootout` すると常駐スクリプトにSIGTERMが飛び、**作業中のcolimaのVMが停止してしまう**ため）。plistを書き換えたときだけ手で bootout → bootstrap する
 
 ## 今後追加するとよいもの
 

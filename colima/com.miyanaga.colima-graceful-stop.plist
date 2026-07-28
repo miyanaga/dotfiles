@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  colima-graceful-stop の LaunchAgent 定義。
+  → ~/Library/LaunchAgents/com.miyanaga.colima-graceful-stop.plist に install.sh がリンクする。
+
+  ログアウト/シャットダウン時に launchd がこのジョブへ SIGTERM を送る。それを受けて
+  スクリプト側が `colima stop` を実行し、VM のデータディスクを壊さずに落とす。
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.miyanaga.colima-graceful-stop</string>
+
+  <!--
+    launchd は ProgramArguments 内の $HOME を展開しないため、sh を経由して展開させる。
+    exec することで sh 自身がスクリプトに置き換わり、SIGTERM が中継なしで直接届く。
+    （dotfiles の置き場所に依存しないよう、~/.local/bin のリンク越しに叩く）
+  -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>exec "$HOME/.local/bin/colima-graceful-stop"</string>
+  </array>
+
+  <!-- ログイン時に常駐を開始する -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!--
+    正常終了（= 停止処理をやり終えた）なら再起動しない。
+    異常終了・kill された場合だけ立て直す。ThrottleInterval で暴走を防ぐ。
+  -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+
+  <!--
+    SIGTERM から SIGKILL までの猶予秒数。`colima stop` は通常 2〜3 秒で終わるが、
+    ディスクの書き戻しに時間がかかる場合を見て余裕を持たせる。
+  -->
+  <key>ExitTimeOut</key>
+  <integer>60</integer>
+
+  <!-- 寝ているだけのプロセスなので優先度は下げておく -->
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

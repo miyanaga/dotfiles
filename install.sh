@@ -18,6 +18,14 @@ LINKS=(
   "zed/settings.json:.config/zed/settings.json"
   "zed/keymap.json:.config/zed/keymap.json"
   "vscode/keybindings.json:Library/Application Support/Code/User/keybindings.json"
+  "colima/graceful-stop.sh:.local/bin/colima-graceful-stop"
+  "colima/fsck.sh:.local/bin/colima-fsck"
+  "colima/com.miyanaga.colima-graceful-stop.plist:Library/LaunchAgents/com.miyanaga.colima-graceful-stop.plist"
+)
+
+# launchd に登録する LaunchAgent のラベル（上の LINKS で plist をリンクしたもの）
+AGENTS=(
+  "com.miyanaga.colima-graceful-stop"
 )
 
 link_one() {
@@ -42,8 +50,37 @@ link_one() {
   echo "link    $dst -> $src"
 }
 
+bootstrap_agent() {
+  local label="$1"
+  local plist="$HOME/Library/LaunchAgents/$label.plist"
+  local domain="gui/$(id -u)"
+
+  if [[ ! -e "$plist" ]]; then
+    echo "skip    launchd $label (plistがない)"
+    return
+  fi
+
+  # すでに登録済みなら触らない。
+  # bootout すると常駐スクリプトに SIGTERM が飛んで colima が停止してしまうので、
+  # install.sh を再実行しただけで作業中のVMが落ちる、という事故を避ける。
+  if launchctl print "$domain/$label" >/dev/null 2>&1; then
+    echo "ok      launchd $label (登録済み)"
+    return
+  fi
+
+  if launchctl bootstrap "$domain" "$plist" 2>/dev/null; then
+    echo "load    launchd $label"
+  else
+    echo "warn    launchd $label の登録に失敗: launchctl bootstrap $domain \"$plist\"" >&2
+  fi
+}
+
 for pair in "${LINKS[@]}"; do
   link_one "${pair%%:*}" "${pair##*:}"
+done
+
+for label in "${AGENTS[@]}"; do
+  bootstrap_agent "$label"
 done
 
 echo

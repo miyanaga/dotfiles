@@ -187,7 +187,31 @@ docker buildx version                       # buildxが認識されているこ�
 ```
 
 VMのリソースは初回の `colima start` の指定がそのまま保存される（変更は `colima stop` → `colima start --memory 16` 等）。
-ログイン時に自動起動させたい場合は `brew services start colima`。
+
+#### 重要: `colima stop` を忘れるとVMのデータディスクが壊れる
+
+`colima stop` を経ずにMacを落とすと、イメージを格納しているext4が書き込み途中で切られて壊れ、
+containerdが `panic: freepages: failed to get all reachable pages` で起動しなくなる。
+2026-07-26にこれで全イメージをロストした。
+
+**dotfilesの `install.sh` がこの対策を自動で仕込むので、追加の作業は不要**:
+
+- LaunchAgent `com.miyanaga.colima-graceful-stop` が、ログアウト/シャットダウン時に
+  `colima stop` を自動実行する
+- `colima start` / `colima restart` の後に `colima-fsck` が走り、データディスクが
+  壊れていれば警告する（正常時は無音）
+
+導入されているかの確認:
+
+```bash
+launchctl print "gui/$(id -u)/com.miyanaga.colima-graceful-stop" | grep -E "state|pid"
+colima-fsck    # 「健全」と出ればOK
+```
+
+詳細と復旧手順（`colima-fsck --repair` / `--reformat`）は [README.md](README.md) の「Colimaの保護」を参照。
+
+なお `brew services start colima` でログイン時の自動起動もできるが、
+`keep_alive successful_exit: true` のため**手動で `colima stop` すると再起動されてしまう**ので使っていない。
 
 代替:
 - **OrbStack**: 起動が速く省メモリでGUIもあるが、**商用利用は有料ライセンス**（Brewfileにコメントで残してある）
