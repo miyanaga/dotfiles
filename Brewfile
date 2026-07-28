@@ -15,6 +15,9 @@ brew "docker-buildx"            # docker buildx サブコマンド（マルチ�
 brew "gh"                       # GitHub CLI（gh auth login で認証）
 brew "awscli"                   # AWS CLI v2（aws configure で認証）
 brew "session-manager-plugin"   # AWS Systems Manager Session Manager（aws ssm start-session 用）
+brew "googleworkspace-cli"      # Google公式のWorkspace CLI。コマンド名は `gws`
+                                # （Drive/Gmail/Calendar/Sheets/Docs/Chat/Admin等。初回は要OAuthログイン）
+                                # 同名バイナリの formula "gws"（gitワークスペース管理）とは競合するので注意
 brew "duckdb"                   # 組み込み型の分析用SQLデータベース（CSV/Parquet等を直接クエリできる）
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
 brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
@@ -36,6 +39,7 @@ cask "visual-studio-code"
 cask "arduino-ide"
 cask "android-studio"           # Android開発IDE（初回起動時にSDK等のセットアップウィザードあり）
 cask "blender"
+cask "rekordbox"                # Pioneer DJの楽曲管理・DJアプリ（自動更新あり。要AlphaThetaアカウントでログイン）
 cask "aqua-voice"               # 音声入力（要ログイン）
 cask "balenaetcher"
 cask "raspberry-pi-imager"

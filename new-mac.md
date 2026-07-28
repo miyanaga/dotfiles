@@ -44,6 +44,7 @@
   - [ ] CleanShot X（ライセンスキー。1Passwordから）
   - [ ] Microsoft Office（Brewfileではコメントアウト。必要なら有効化してMicrosoftアカウントで認証）
   - [ ] djay Pro / Aqua Voice（各アカウントでログイン）
+  - [ ] rekordbox（AlphaThetaアカウントでログイン。サブスク契約分の機能は要ログイン）
 
 > App Storeアプリ（Pixelmator Pro / djay Pro / UTM）は `brew bundle` 中に `mas` 経由で入るが、
 > **Apple IDサインインが先に済んでいないと失敗する**（失敗しても他のインストールは続行される）。
