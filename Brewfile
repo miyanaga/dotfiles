@@ -19,6 +19,14 @@ brew "googleworkspace-cli"      # Google公式のWorkspace CLI。コマンド名
                                 # （Drive/Gmail/Calendar/Sheets/Docs/Chat/Admin等。初回は要OAuthログイン）
                                 # 同名バイナリの formula "gws"（gitワークスペース管理）とは競合するので注意
 brew "duckdb"                   # 組み込み型の分析用SQLデータベース（CSV/Parquet等を直接クエリできる）
+
+# 画像処理
+brew "webp"                     # WebPのライブラリ(libwebp)とCLI（cwebp/dwebp/gif2webp）。formula名は libwebp ではなく webp
+brew "libavif"                  # AVIFのCLI（avifenc/avifdec）。ImageMagick側のAVIF対応は依存のlibheif経由なので、
+                                # これは単体のエンコーダ/デコーダが欲しい場合に入れる
+brew "imagemagick"              # magickコマンド。webp/libheif等は依存で入る（AVIF・HEIC・WebPとも読み書き可）
+
+# zshプラグイン
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示
 brew "zsh-history-substring-search"   # ↑/↓で部分一致の履歴検索
 # brew "zsh-syntax-highlighting"      # コマンドラインの色付け（欲しければ）
@@ -44,6 +52,8 @@ cask "aqua-voice"               # 音声入力（要ログイン）
 cask "balenaetcher"
 cask "raspberry-pi-imager"
 cask "cleanshot"                # CleanShot X（要ライセンスキー入力）
+cask "libreoffice"              # オフィススイート（Office文書の閲覧・変換用。ログイン不要）。
+                                # UIを日本語にするなら cask "libreoffice-language-pack" も追加する
 # cask "microsoft-office"       # Word/Excel/PowerPoint一式（要Microsoftアカウントでライセンス認証）。
                                 # 巨大（約2GB）でDLに時間がかかるので、必要になったら有効化する
 
