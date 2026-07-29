@@ -52,6 +52,8 @@ cask "aqua-voice"               # 音声入力（要ログイン）
 cask "balenaetcher"
 cask "raspberry-pi-imager"
 cask "cleanshot"                # CleanShot X（要ライセンスキー入力）
+cask "windows-app"              # Windowsへのリモートデスクトップ（旧microsoft-remote-desktop）。
+                                # 接続先PCの登録やAzure Virtual Desktopへのサインインは初回起動後に手動
 cask "libreoffice"              # オフィススイート（Office文書の閲覧・変換用。ログイン不要）。
                                 # UIを日本語にするなら cask "libreoffice-language-pack" も追加する
 # cask "microsoft-office"       # Word/Excel/PowerPoint一式（要Microsoftアカウントでライセンス認証）。
