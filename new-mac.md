@@ -144,6 +144,17 @@ brew bundle --file ./Brewfile --verbose       # mise, wezterm, zed, colima等を
 exec zsh
 ```
 
+**ワーカー機（普段使いしないMac）をセットアップする場合** は、`Brewfile` の代わりに
+`Brewfile.worker` を使う。CLI・開発環境は同じで、趣味・制作系のGUIアプリとApp Storeアプリが入らない:
+
+```bash
+brew bundle --file ./Brewfile.worker --verbose
+```
+
+このとき、上の「手動ログインToDo」のうち **Apple ID / djay Pro / rekordbox / CleanShot X は不要**
+になる（該当アプリを入れないため）。1Password・Google・Claude Code・Tailscaleは引き続き必要。
+振り分けの詳細はdotfilesのREADME.md「Brewfileの3分割」を参照。
+
 > `--verbose` を付ける理由: `brew bundle` は最初に未導入のパッケージを**まとめて先読みダウンロード**するが、
 > 通常はこの間の出力が抑制され、数GB落としている最中でも無言になる（止まったように見える）。
 > `--verbose` を付けるとダウンロードの進捗バーが出る。Blenderなど大きなcaskがあるので時間がかかることもある。

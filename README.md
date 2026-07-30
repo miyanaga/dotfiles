@@ -25,7 +25,9 @@ macの開発環境設定（zsh・git・WezTerm・macOSシステム設定・Homeb
 dotfiles/
 ├── new-mac.md          # 素のMacをセットアップする際の全体手順書
 ├── install.sh          # シンボリックリンクを張るインストーラ
-├── Brewfile            # Homebrewパッケージ一覧（brew bundleで一括導入）
+├── Brewfile            # Homebrewパッケージ一覧・普段使い機用（brew bundleで一括導入）
+├── Brewfile.common     # ↑と↓の両方が読み込む共通部分（CLI・開発・インフラ系）
+├── Brewfile.worker     # ワーカー機（リモートデスクトップ運用のMac）用
 ├── zsh/
 │   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・部分一致補完・プラグイン）
 │   ├── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
@@ -51,6 +53,32 @@ dotfiles/
     ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
     ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
     └── import.sh       # 新マシンで実行: アーカイブから復元
+```
+
+## Brewfileの3分割（普段使い機 / ワーカー機）
+
+マシンの役割が2種類あるので、Brewfileを共通部分と役割ごとの差分に分けています。
+
+| ファイル | 中身 | 使い方 |
+| --- | --- | --- |
+| `Brewfile.common` | CLI・開発環境・インフラ系（git/mise/colima/docker/gh/aws/画像処理/1Password/Tailscale/エディタ/LibreOffice等） | 単体では使わない。下2つが読み込む |
+| `Brewfile` | common + 普段使いのGUIアプリ（djay Pro / rekordbox / Blender / Pixelmator / Arduino / Android Studio / CleanShot / App Store経由のアプリ等） | `brew bundle --file Brewfile` |
+| `Brewfile.worker` | common + ブラウザ2種（Firefox / Chromium） | `brew bundle --file Brewfile.worker` |
+
+**ワーカー機** は普段使いはせず、常時起動してリモートデスクトップ経由で定期的な作業（バッチ・変換・ビルド・検証）を担うMacを想定しています。方針:
+
+- CLI・開発環境は普段使い機と同等（`Brewfile.common` をそのまま使う）
+- 趣味・制作系のGUIアプリは入れない
+- LibreOfficeは入れる。`soffice --headless --convert-to pdf` でOffice文書をCLIから変換するため
+- App Store（mas）は使わない。Apple IDのサインインを前提にしたくないため
+- `windows-app`（リモートデスクトップのクライアント）はコメントアウト。ワーカー機は接続「される」側なので、そのMacから別のWindowsへ繋ぐ場合だけ有効化する
+
+読み込みは `instance_eval(File.read("#{__dir__}/Brewfile.common"))` の1行です（Brewfileの実体はRubyのDSLなので、そのままRubyとして評価される）。パスは Brewfile 自身の位置から解決するので、どのディレクトリから `brew bundle` しても動きます。
+
+分割が正しく展開されているかは、パッケージ一覧を出して確認できます:
+
+```bash
+brew bundle list --all --file ~/dev/dotfiles/Brewfile.worker
 ```
 
 ## zshの構成（フレームワーク不使用・プラグイン2つだけ）
@@ -88,6 +116,8 @@ cd ~/dev/dotfiles
 # 3. Homebrewパッケージを一括インストール
 # --verbose 必須級: 付けないと先読みダウンロード中の出力が抑制され、無言のまま数十分固まったように見える
 brew bundle --file ~/dev/dotfiles/Brewfile --verbose
+# ワーカー機（普段使いしないMac）の場合は代わりに:
+# brew bundle --file ~/dev/dotfiles/Brewfile.worker --verbose
 
 # 4. macOSシステム設定を適用（キーボード・Finder・Dock・電源等。一部は要再ログイン）
 #    電源設定(pmset)の変更でsudoのパスワードを聞かれる
@@ -114,10 +144,20 @@ cd ~/dev/dotfiles && git pull
 # リンク済みなのでpullだけで反映される（Brewfileを変えたときは brew bundle も）
 ```
 
-**新しいアプリを入れたとき** は Brewfile にも追記しておくと、次のマシンでも自動で入ります。現在の全インストール済みパッケージから生成し直すこともできます:
+**新しいアプリを入れたとき** は Brewfile にも追記しておくと、次のマシンでも自動で入ります。追記先は用途で選びます:
+
+| 入れるもの | 追記先 |
+| --- | --- |
+| CLI・開発環境・どのMacにも欲しいもの | `Brewfile.common` |
+| 普段使い機だけのGUIアプリ（趣味・制作系、App Store経由） | `Brewfile` |
+| ワーカー機だけに必要なもの | `Brewfile.worker` |
+
+現在の全インストール済みパッケージから生成し直すこともできますが、**`--force` で `Brewfile` を直接上書きすると分割（`instance_eval` の行）ごと消えます。** 別ファイルに出して差分を見てから手で振り分けてください:
 
 ```bash
-brew bundle dump --force --file ~/dev/dotfiles/Brewfile
+brew bundle dump --file /tmp/Brewfile.dump
+diff <(brew bundle list --all --file ~/dev/dotfiles/Brewfile | sort) \
+     <(brew bundle list --all --file /tmp/Brewfile.dump | sort)
 ```
 
 ## Colimaの保護（`colima stop` の自動化とデータディスクの点検）

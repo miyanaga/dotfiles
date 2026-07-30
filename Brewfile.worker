@@ -1,0 +1,23 @@
+# ワーカー機（普段使いしないMac）用のパッケージ定義
+# 使い方: brew bundle --file ~/dev/dotfiles/Brewfile.worker
+#
+# 想定する使い方:
+#   - 常時起動しておき、リモートデスクトップ（画面共有 / Tailscale経由のSSH）で接続して
+#     定期的なバッチ・変換・ビルド・検証といった作業をさせる
+#   - CLIと開発環境は普段使い機と同等（Brewfile.common をそのまま読み込む）
+#   - 趣味・制作系のGUIアプリ（djay / rekordbox / Blender / Pixelmator など）は入れない
+#   - App Store（mas）は使わない。Apple IDのサインインを前提にしたくないため
+
+instance_eval(File.read("#{__dir__}/Brewfile.common"))
+
+# --- ここからワーカー機だけに入れるもの ---
+
+# ブラウザ（スクレイピング・自動テスト・表示確認用に複数エンジンを揃えておく）
+cask "firefox"
+cask "chromium"                 # 自動更新なし（brew upgradeで更新）
+
+# 任意（必要になったらコメントを外す）
+# cask "claude"                 # Claudeデスクトップアプリ。CLIのclaudeだけで足りるなら不要
+# cask "windows-app"            # このMacから別のWindowsへ繋ぐ場合のみ。
+                                # このMac「へ」接続するだけなら不要（macOS標準の画面共有を使う）
+# cask "libreoffice-language-pack"  # LibreOfficeのUIを日本語にする場合
