@@ -28,6 +28,8 @@ dotfiles/
 ├── Brewfile            # Homebrewパッケージ一覧・普段使い機用（brew bundleで一括導入）
 ├── Brewfile.common     # ↑と↓の両方が読み込む共通部分（CLI・開発・インフラ系）
 ├── Brewfile.worker     # ワーカー機（リモートデスクトップ運用のMac）用
+├── install-all-bin-repo.sh  # bin.ideamans.com の自社CLIを全部入れる／更新する
+├── claude-marketplaces.sh   # Claude Codeに自社プラグインマーケットプレイスを登録する
 ├── zsh/
 │   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・部分一致補完・プラグイン）
 │   ├── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
@@ -81,6 +83,53 @@ dotfiles/
 brew bundle list --all --file ~/dev/dotfiles/Brewfile.worker
 ```
 
+## 自社ツールの導入（bin.ideamans.com / Claude Codeプラグイン）
+
+Homebrewでは配らないアイデアマンズ独自のツール類。どちらのマシンでも入れる。
+
+### `install-all-bin-repo.sh` — bin.ideamans.com のCLIを一括導入
+
+[bin.ideamans.com](https://bin.ideamans.com)（自社のCLI配布サイト / bin-repo）にある全プログラムをインストール／アップグレードする。`gg`・`gplay`・`loadshow`・`crux`・`et`・`asc`・`safebackup`・`lightfile-*` など約28本。
+
+```bash
+./install-all-bin-repo.sh              # 全部を最新版に（何度でも実行してよい）
+./install-all-bin-repo.sh --yes        # 確認プロンプトなし
+./install-all-bin-repo.sh --help       # 配布中のパッケージ一覧を表示
+```
+
+中身は配布元のインストーラを叩いているだけで、以下と等価:
+
+```bash
+curl -fsSL 'https://bin.ideamans.com/_/install.sh' | bash
+```
+
+- 既定のインストール先は `/usr/local/bin`。書き込み権限がなければsudoのパスワードを聞かれる
+- 変えたいときは `--install-dir ~/bin`
+- **PATHの優先順位に注意**: `~/.local/bin` のほうが先に見つかるので、そこに同名のコマンドがあるとアップグレードしても古いほうが使われ続ける。疑わしいときは `command -v <コマンド名>` で実際のパスを確認する
+
+### `claude-marketplaces.sh` — Claude Codeのプラグインマーケットプレイス登録
+
+自社の[公開](https://github.com/ideamans/claude-public-plugins)／[非公開](https://github.com/ideamans/claude-private-plugins)プラグインマーケットプレイスを、userスコープ（`~/.claude/settings.json`）に登録する。
+
+```bash
+./claude-marketplaces.sh            # 登録（登録済みならスキップ。何度でも実行してよい）
+./claude-marketplaces.sh --update   # 登録済みのものを最新に更新
+./claude-marketplaces.sh --list     # 現在の登録状況を表示するだけ
+```
+
+登録するのは「どこから探すか」だけで、**プラグイン自体は入らない**。使いたいものは個別に入れる:
+
+```bash
+claude plugin marketplace list       # 登録済みマーケットプレイス
+claude plugin install <プラグイン名>   # 例: claude plugin install web-g6
+```
+
+非公開のほう（`ideamans/claude-private-plugins`）はGitHubの認証が要るので、**SSH鍵の移行（`ssh/import.sh`）か `gh auth login` を先に済ませておく**。失敗したときの疎通確認:
+
+```bash
+git ls-remote https://github.com/ideamans/claude-private-plugins
+```
+
 ## zshの構成（フレームワーク不使用・プラグイン2つだけ）
 
 以前使っていたprezto等のフレームワークは使わず、素のzsh + 最小限のプラグインで構成しています。
@@ -123,7 +172,12 @@ brew bundle --file ~/dev/dotfiles/Brewfile --verbose
 #    電源設定(pmset)の変更でsudoのパスワードを聞かれる
 ./macos/defaults.sh
 
-# 5. シェルを再起動
+# 5. 自社ツール（Homebrewでは配っていないもの）
+./install-all-bin-repo.sh                     # bin.ideamans.com のCLI一式
+./claude-marketplaces.sh                      # Claude Codeのプラグインマーケットプレイス登録
+                                              # ※非公開のほうはGitHub認証が要るのでSSH鍵移行の後に
+
+# 6. シェルを再起動
 exec zsh
 ```
 

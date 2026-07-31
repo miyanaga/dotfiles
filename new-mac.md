@@ -12,7 +12,7 @@
 | 0 | Xcode CLT + App StoreでXcodeのDL開始 | CLT 5〜10分 / Xcode 30分〜 | ダイアログ承認・App Storeサインイン |
 | 1 | Claude Code | 2分 | ブラウザでOAuthログイン |
 | 2 | Homebrew | 5分 | パスワード入力・Enter |
-| 3 | dotfiles導入 + Brewfile一括インストール（mise/WezTerm/Zed/Colima）+ SSH移行 | 10分 | AirDropでSSHアーカイブ転送 |
+| 3 | dotfiles導入 + Brewfile一括インストール（mise/WezTerm/Zed/Colima）+ SSH移行 + 自社ツール | 10分 | AirDropでSSHアーカイブ転送 |
 | 4 | Xcodeの初期設定 | 10分 | ライセンス同意 |
 
 ポイント: **Xcodeのダウンロード（数十GB）を最初に仕掛けて、待っている間に残りを全部済ませる。**
@@ -168,6 +168,19 @@ brew bundle --file ./Brewfile.worker --verbose
 # 旧マシン: ~/dev/dotfiles/ssh/export.sh → できたファイルをAirDropで送る
 # 新マシン: ~/dev/dotfiles/ssh/import.sh <受け取ったファイル>
 ```
+
+### 自社ツール（Homebrewでは配っていないもの）
+
+**SSH鍵の移行を済ませてから**実行する（非公開リポジトリのマーケットプレイス登録にGitHub認証が要るため）。
+
+```bash
+./install-all-bin-repo.sh    # bin.ideamans.com のCLI一式（gg/gplay/loadshow/crux/asc等 約28本）
+                             # 既定の /usr/local/bin に書き込むのでsudoを聞かれることがある
+./claude-marketplaces.sh     # Claude Codeのプラグインマーケットプレイス（公開/非公開）を登録
+```
+
+どちらも何度実行しても安全。詳細と注意点（PATHの優先順位、GitHub認証の確認方法）は
+dotfilesのREADME.md「自社ツールの導入」を参照。
 
 ### ランタイムのインストール（mise）
 
