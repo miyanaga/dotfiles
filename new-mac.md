@@ -286,6 +286,23 @@ sudo launchctl bootstrap system /System/Library/LaunchDaemons/com.apple.screensh
 
 > 注意: フルコントロールの「リモートマネージメント（ARD）」をCLIだけで完全設定するのはmacOSの制限で不可（MDMが必要）。通常の画面共有（VNC）は上記で有効になる。
 
+### そのMacをワーカー機（自宅据え置きのリモート運用）にするなら
+
+上の2つを個別に叩く代わりに、まとめて設定するスクリプトがある。
+SSH・画面共有に加えて、非スリープ・スクリーンセーバ5分＋即ロック・自動ログインOFF・
+FileVault解除後の自動ログイン抑止・macOS自動アップデートOFFまでを冪等に適用し、検証まで行う。
+
+```bash
+~/dev/dotfiles/worker/setup.sh          # ワーカーモードにする
+~/dev/dotfiles/worker/setup.sh --check  # 検証だけ
+~/dev/dotfiles/worker/setdown.sh        # 役割を終えたら解除する
+```
+
+FileVaultがONの場合、**再起動後はTailscale経由では復帰できない**（データボリューム解除前は
+Tailscaleが動いていないため）。計画的な再起動は `sudo fdesetup authrestart`、不意の再起動後は
+同じLAN内から `ssh` してパスワード認証すると解除できる。詳細は [README.md](README.md) の
+「ワーカーモード」を参照。
+
 ### キーボードのリピート速度（現行機より少し速く）
 
 現行機の実測値は `KeyRepeat=1.6` / `InitialKeyRepeat=12`（GUIの最速 2/15 を超える値）。

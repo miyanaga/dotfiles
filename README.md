@@ -47,6 +47,10 @@ dotfiles/
 ├── macos/
 │   ├── defaults.sh         # キーボード・Finder・Dock・電源等のシステム設定を適用・検証するスクリプト
 │   └── reset-tailscale.sh  # Tailscaleのデバイス身元を完全リセット（Time Machine移行後の重複対策）
+├── worker/             # ワーカーモードの切り替え（下記「ワーカーモード」参照）
+│   ├── setup.sh        # リモート運用向けの設定を一括ON（SSH・画面共有・非スリープ・即ロック等）
+│   ├── setdown.sh      # 上記を解除して普段使いのMacに戻す
+│   └── common.sh       # 上記2つの共通実体（直接は実行しない）
 ├── colima/             # ColimaのVMを壊さないための仕掛け（下記「Colimaの保護」参照）
 │   ├── graceful-stop.sh  # → ~/.local/bin/colima-graceful-stop  ログアウト時にcolima stopする常駐スクリプト
 │   ├── fsck.sh           # → ~/.local/bin/colima-fsck  データディスクの健全性チェック・修復
@@ -82,6 +86,89 @@ dotfiles/
 ```bash
 brew bundle list --all --file ~/dev/dotfiles/Brewfile.worker
 ```
+
+## ワーカーモード（自宅据え置きのMacを安全にリモート運用する）
+
+`Brewfile.worker` が「何を入れるか」なら、`worker/setup.sh` は「どう振る舞わせるか」です。
+自宅に据え置いてTailscale経由で使うMacに必要なシステム設定を、まとめてON/OFFします。
+
+```bash
+./worker/setup.sh            # ワーカーモードにする
+./worker/setup.sh --check    # 現在値が期待どおりか検証するだけ
+./worker/setdown.sh          # 解除して普段使いのMacに戻す
+./worker/setdown.sh --check
+```
+
+どれも冪等です。root権限が要るので `--check` でもsudoのパスワードを聞かれます
+（リモートログインや画面共有の状態はrootでないと読めないため）。
+
+### 目指す状態
+
+```
+電源ON / 再起動
+    ↓
+FileVaultのロック画面   ← ここだけ物理 or LAN内SSHでの解除が要る（後述）
+    ↓
+ログイン画面で待機（自動ログインしない）
+    ↓
+Tailscale経由で画面共有 → アカウントのパスワードで認証
+    ↓
+5分放置すればスクリーンセーバ → 即ロック
+```
+
+本体はスリープせず画面だけ消えるので、席を外している間もSSH・同期・長時間のビルドが止まらず、
+Tailscaleも応答し続けます。Amphetamineのような常駐アプリは不要です（`pmset` で足ります）。
+
+### 変える項目
+
+| 項目 | setup.sh | setdown.sh | なぜ |
+|---|---|---|---|
+| FileVault | ON（確認のみ） | **ONのまま** | 盗難・持ち出し時の唯一の防御線。自動で有効化はしない（復旧キーを1Passwordに保管してほしいので手作業に残している） |
+| 自動ログイン | OFF | **OFFのまま** | 利便性のために無防備な起動に戻す意味がない |
+| スクリーンセーバ後のロック | 即時（確認のみ） | そのまま | 変更にパスワード入力が要るため検証だけ行い、ズレていたら直すコマンドを表示する |
+| リモートログイン(SSH) | ON | OFF | 画面共有だけでなく、FileVaultのリモート解除にも要る |
+| 画面共有 | ON | OFF | |
+| FileVault解除後の自動ログイン | 抑止する | 既定に戻す | 既定だとFileVaultのパスワードを入れただけでデスクトップまで入ってしまう。SSHでリモート解除したときに、誰も座っていないMacでセッションが開くのを防ぐ |
+| スクリーンセーバ開始 | 5分 | 既定（20分） | |
+| 画面オフ | 5分 | 10分 | 戻し先は工場出荷値ではなく `macos/defaults.sh` の値 |
+| 本体スリープ / ディスクスリープ | しない | しない | 同上。`macos/defaults.sh` と同じ |
+| ネットワークでスリープ解除 | ON | ON | 同上 |
+| 停電復帰後の自動起動 | ON | OFF | 対応機種のみ。Apple Siliconはハード側で自動起動するため `pmset -g cap` に出ず、skipされる |
+| macOS自動アップデート | OFF | ON | 自動で再起動されるとFileVaultのロック画面で止まり、リモートから触れなくなる。ダウンロードとセキュリティ対応(XProtect等)は止めない |
+
+「常にON」の3項目を `setdown.sh` で戻さないのは意図です。**便利に戻すために穴を開けるのは目的ではない**ため。
+
+電源設定の戻し先を工場出荷値ではなく `macos/defaults.sh` の値にしているのは、
+2つのスクリプトが同じ項目を取り合って上書きし合うのを避けるためです。
+
+### FileVaultと再起動（唯一の制約）
+
+FileVaultがONだと、起動直後のデータボリューム解除までは **Tailscaleも通常のSSHセッションも使えません**。
+どちらも設定の実体がデータボリューム側にあるためです。対処は3つ:
+
+1. **計画的な再起動**（アップデート等）は `sudo fdesetup authrestart`。
+   FileVaultを維持したまま、一度だけ認証済みの状態で再起動します
+2. **不意の再起動のあと**は、同じLAN内から `ssh <ユーザー名>@<LAN内のIP>` してパスワード認証すると
+   データボリュームが解除されます。macOS標準の機能で、`man fdesetup` の
+   **REMOTE UNLOCKING VIA SSH** に書かれています。Remote Loginが有効なことが前提（＝`setup.sh` が満たす）。
+   認証してもすぐシェルには入れず、SSHが一度切れてからサービスが上がり直します
+3. **外出先からその経路を使う**には、家に常時起動のTailscaleノード（別のMac・Raspberry Pi・
+   サブネットルーター）が要ります。**Tailscale経由では解除できません**
+
+停電・電源断・強制再起動には `authrestart` は効きません。それが困る運用なら、
+無停電電源装置(UPS)を挟むか、家に踏み台ノードを1つ置くのが現実的です。
+
+### うまくいかないとき
+
+- **SSH・画面共有が切り替わらない** → 端末アプリ（WezTerm等）に「フルディスクアクセス」を与えて再実行。
+  `systemsetup -setremotelogin` がこの権限を要求します（無い場合は `launchctl` に自動でフォールバックしますが、
+  それも弾かれることがあります）
+- **画面共有がONにならない** → リモート管理(Apple Remote Desktop)が有効だと競合します。
+  スクリプトが検出したら警告と停止コマンドを表示します
+- **画面共有・SSH経由で `setdown.sh` を実行しようとしている** → その接続自体が切れます。
+  スクリプトが検出して確認を求めます（`--yes` で省略可）。切れた後は物理的にMacの前に座らないと戻せません
+- **ヘッドレス（ディスプレイ未接続）で解像度がおかしい** → ダミーHDMIプラグを挿すか `displayplacer` で調整します。
+  これはスクリプトの管轄外です
 
 ## 自社ツールの導入（bin.ideamans.com / Claude Codeプラグイン）
 
@@ -179,6 +266,10 @@ brew bundle --file ~/dev/dotfiles/Brewfile --verbose
 
 # 6. シェルを再起動
 exec zsh
+
+# 7. （ワーカー機の場合のみ）リモート運用向けの設定を入れる
+#    SSH・画面共有・非スリープ・即ロック等。詳細は上の「ワーカーモード」
+./worker/setup.sh
 ```
 
 ## 日常の使い方
@@ -359,6 +450,8 @@ configから参照されていない鍵は新マシンに持ち込みません �
 - `macos/defaults.sh` のキーリピート速度はGUIの最速値を超えた設定のため、システム設定のキーボード画面でスライダーを触ると上書きされる。その場合は再度スクリプトを実行
 - **Time Machineで移行するとTailscaleが旧Macと重複する**。移行元の machine key（デバイス身元）まで複製されるため、admin上で旧Macと同じデバイス扱いになり同じ100.x IPを奪い合う（"Duplicate node key"）。`brew uninstall` や `rm -rf /Library/Tailscale` では直らない — 身元は **System keychain の `tailscale-*`**（`tailscale-current-profile`/`tailscale-profiles`/`tailscale-id-profile-*`等）に保存されているため。`./macos/reset-tailscale.sh`（`--list` で対象確認）で全消し → 再起動 → 再ログインすると、新しい身元・新IPで別デバイスとして登録し直せる。詳細はスクリプト冒頭のコメントと [new-mac.md](new-mac.md) を参照
 - `install.sh` は登録済みのLaunchAgentには触らない（`launchctl bootout` すると常駐スクリプトにSIGTERMが飛び、**作業中のcolimaのVMが停止してしまう**ため）。plistを書き換えたときだけ手で bootout → bootstrap する
+- **FileVaultがONのMacは、再起動するとTailscale経由では復帰できない**。データボリュームが解除されるまでTailscaleもSSHセッションも動かないため。計画的な再起動は `sudo fdesetup authrestart`、不意の再起動後は同じLAN内から `ssh` してパスワード認証（`man fdesetup` の REMOTE UNLOCKING VIA SSH）。外出先からやるには家に常時起動のTailscaleノードが要る。詳細は「ワーカーモード」節
+- `worker/setdown.sh` は FileVault・自動ログインOFF・即時ロックを**戻さない**。意図的な設計（利便性のために穴を開けない）。また、画面共有やSSH経由で実行するとその接続自体が切れるため、検出したら確認を求める
 
 ## 今後追加するとよいもの
 
