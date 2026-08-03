@@ -23,6 +23,8 @@ cask "android-studio"           # Android開発IDE（初回起動時にSDK等の
 cask "blender"
 cask "rekordbox"                # Pioneer DJの楽曲管理・DJアプリ（自動更新あり。要AlphaThetaアカウントでログイン）
 cask "aqua-voice"               # 音声入力（要ログイン）
+cask "obs"                      # 配信・画面録画（自動更新あり）。初回起動時に「画面収録」と
+                                # 「マイク」の許可が要る。仮想カメラを使うならシステム機能拡張の承認も
 cask "balenaetcher"
 cask "raspberry-pi-imager"
 cask "cleanshot"                # CleanShot X（要ライセンスキー入力）

@@ -68,7 +68,7 @@ dotfiles/
 | ファイル | 中身 | 使い方 |
 | --- | --- | --- |
 | `Brewfile.common` | CLI・開発環境・インフラ系（git/mise/colima/docker/gh/aws/画像処理/1Password/Tailscale/エディタ/LibreOffice等） | 単体では使わない。下2つが読み込む |
-| `Brewfile` | common + 普段使いのGUIアプリ（djay Pro / rekordbox / Blender / Pixelmator / Arduino / Android Studio / CleanShot / App Store経由のアプリ等） | `brew bundle --file Brewfile` |
+| `Brewfile` | common + 普段使いのGUIアプリ（djay Pro / rekordbox / Blender / Pixelmator / OBS / Arduino / Android Studio / CleanShot / App Store経由のアプリ等） | `brew bundle --file Brewfile` |
 | `Brewfile.worker` | common + ブラウザ2種（Firefox / Chromium） | `brew bundle --file Brewfile.worker` |
 
 **ワーカー機** は普段使いはせず、常時起動してリモートデスクトップ経由で定期的な作業（バッチ・変換・ビルド・検証）を担うMacを想定しています。方針:
