@@ -6,6 +6,7 @@
 
 # 独自タップ
 tap "miyanaga/tap"
+tap "craftamap/tap"             # Bitbucket CLI（bb）用
 
 # CLIツール
 brew "git"
@@ -16,6 +17,9 @@ brew "docker"                   # docker CLI本体（デーモンはColimaのVM�
 brew "docker-compose"           # docker compose サブコマンド
 brew "docker-buildx"            # docker buildx サブコマンド（マルチアーキビルド等）
 brew "gh"                       # GitHub CLI（gh auth login で認証）
+brew "glab"                     # GitLab CLI（glab auth login で認証）
+brew "craftamap/tap/bb"         # Bitbucket CLI。非公式（Atlassian公式のacliはBitbucket非対応）
+                                # 認証は `bb auth login`（Bitbucketのアプリパスワードを使う）
 brew "awscli"                   # AWS CLI v2（aws configure で認証）
 brew "session-manager-plugin"   # AWS Systems Manager Session Manager（aws ssm start-session 用）
 brew "googleworkspace-cli"      # Google公式のWorkspace CLI。コマンド名は `gws`
