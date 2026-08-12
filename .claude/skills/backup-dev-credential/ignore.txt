@@ -1,0 +1,35 @@
+# 走査から除外するパターン（リポジトリ相対パス、または絶対パスに対するグロブ）
+# 空行と # 始まりはコメント。
+
+# --- テスト用の使い捨て鍵・フィクスチャ ---
+*test-key-*
+*/testdata/*
+*/fixtures/*
+*/__tests__/*
+*/__fixtures__/*
+*self-signed*
+*stub-*
+*dummy*
+
+# --- 公開CA証明書バンドル（秘密でない・巨大） ---
+*cacerts.pem
+*ca-bundle*
+*ca-certificates*
+*/certifi/*
+*/castore/*
+
+# --- 証明書チェーンの公開部分（秘密鍵ではない） ---
+*fullchain.pem
+*chain.pem
+*issuer.pem
+*csr.pem
+*.pub.pem
+*/config-public-key.pem
+
+# --- エディタ・ツールが落としてくるもの ---
+*/.vscode-test/*
+*/scaffold/*
+*/preview/*
+
+# --- Let's Encrypt のステージング環境（本番の鍵ではない） ---
+*/certs-staging/*

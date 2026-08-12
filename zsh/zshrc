@@ -29,7 +29,12 @@ command -v mise >/dev/null && eval "$(mise activate zsh)"
 
 # --- エイリアス -----------------------------------------------------------
 alias cc="claude --dangerously-skip-permissions"
-alias ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"   # Tailscale CLI
+# Tailscale CLI。macOSのアプリ版はappバンドルの中、Linuxは普通にPATHに入る。
+if [[ -x /Applications/Tailscale.app/Contents/MacOS/Tailscale ]]; then
+  alias ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+elif command -v tailscale >/dev/null; then
+  alias ts="tailscale"
+fi
 # z [path ...] - Zedを新規ウィンドウで開く（パスが存在しなければ mkdir -p で作成）
 z() {
   local arg
@@ -65,18 +70,35 @@ w() {
 # --- ユーティリティ関数（scode/scursor/szed等） ------------------------------
 [[ -f "$HOME/.zsh_functions" ]] && source "$HOME/.zsh_functions"
 
-# --- プラグイン（brew install zsh-autosuggestions zsh-history-substring-search）
+# --- プラグイン ------------------------------------------------------------
+# macOS: brew install zsh-autosuggestions zsh-history-substring-search
+# Ubuntu: sudo apt install zsh-autosuggestions zsh-syntax-highlighting
+#         （history-substring-search はaptに無いので手動でcloneする）
+# 置き場所がOSで違うので、候補を順に見て最初に見つかったものを読む。
+_load_zsh_plugin() {  # _load_zsh_plugin <プラグイン名> <ファイル名>
+  local dir
+  for dir in "${HOMEBREW_PREFIX:-/opt/homebrew}/share/$1" \
+             /usr/share/zsh-plugins/"$1" \
+             /usr/share/"$1" \
+             "$HOME/.zsh/$1"; do
+    if [[ -f "$dir/$2" ]]; then
+      source "$dir/$2"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # 入力中、履歴からの候補をグレーで先読み表示（→キーで確定）
-if [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
-  source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+if _load_zsh_plugin zsh-autosuggestions zsh-autosuggestions.zsh; then
   ZSH_AUTOSUGGEST_STRATEGY=(history completion)  # 履歴になければ補完候補からも提案
 fi
 # 途中の文字列でも一致する履歴を ↑/↓ で検索（部分一致検索）
-if [[ -f /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]]; then
-  source /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+if _load_zsh_plugin zsh-history-substring-search zsh-history-substring-search.zsh; then
   bindkey '^[[A' history-substring-search-up
   bindkey '^[[B' history-substring-search-down
 fi
+unfunction _load_zsh_plugin
 
 # --- プロンプト（調整は starship/starship.toml で行う） ----------------------
 if command -v starship >/dev/null; then

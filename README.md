@@ -1,6 +1,8 @@
 # dotfiles
 
-macの開発環境設定（zsh・git・WezTerm・macOSシステム設定・Homebrewパッケージ）を1つのリポジトリで管理し、複数のマシンで同じ環境を再現するためのリポジトリ。
+開発環境設定（zsh・git・WezTerm・システム設定・パッケージ一覧）を1つのリポジトリで管理し、複数のマシンで同じ環境を再現するためのリポジトリ。
+
+普段使いのMacが主役ですが、**開発サーバーのUbuntuでも同じことができる状態を保つ**方針です。
 
 ## dotfilesの仕組み（初めての人向け）
 
@@ -21,15 +23,20 @@ macの開発環境設定（zsh・git・WezTerm・macOSシステム設定・Homeb
 
 ## 構成
 
+**macOS固有のものは `macos/`、Ubuntu固有のものは `ubuntu/`、どちらでも意味があるものはルート直下**
+に置いています（詳しくは CLAUDE.md の「大原則」）。
+
 ```
 dotfiles/
+├── CLAUDE.md           # このリポジトリを触るときの方針（OS間の同等性・スクリプトの作法）
 ├── new-mac.md          # 素のMacをセットアップする際の全体手順書
-├── install.sh          # シンボリックリンクを張るインストーラ
-├── Brewfile            # Homebrewパッケージ一覧・普段使い機用（brew bundleで一括導入）
-├── Brewfile.common     # ↑と↓の両方が読み込む共通部分（CLI・開発・インフラ系）
-├── Brewfile.worker     # ワーカー機（リモートデスクトップ運用のMac）用
-├── install-all-bin-repo.sh  # bin.ideamans.com の自社CLIを全部入れる／更新する
+├── install.sh          # 共通設定をリンクし、OSを見て macos/ か ubuntu/ の install.sh を呼ぶ
+├── install-all-bin-repo.sh  # bin.ideamans.com の自社CLIを全部入れる／更新する（mac/Ubuntu共通）
 ├── claude-marketplaces.sh   # Claude Codeに自社プラグインマーケットプレイスを登録する
+│
+│   # ---- 共通（どちらのOSでも使う） ----
+├── lib/
+│   └── install-common.sh  # install.sh 群が共有するリンク処理（直接は実行しない）
 ├── zsh/
 │   ├── zshrc           # → ~/.zshrc      対話シェル設定（履歴・部分一致補完・プラグイン）
 │   ├── zprofile        # → ~/.zprofile   ログイン時のPATH設定（Homebrew等）
@@ -43,23 +50,59 @@ dotfiles/
 ├── zed/
 │   └── settings.json   # → ~/.config/zed/settings.json
 ├── vscode/
-│   └── keybindings.json # → ~/Library/Application Support/Code/User/keybindings.json
+│   └── keybindings.json # リンク先はOSで違う（macOSは ~/Library/...、Linuxは ~/.config/Code/...）
+├── ssh/
+│   ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
+│   ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
+│   └── import.sh       # 新マシンで実行: アーカイブから復元
+├── .claude/skills/
+│   └── backup-dev-credential/  # → ~/.claude/skills/  開発ツリーの.envや鍵を1Passwordに退避・復元
+│
+│   # ---- macOS固有 ----
 ├── macos/
+│   ├── install.sh          # VS Codeのパス・colimaのLaunchAgent登録
+│   ├── Brewfile            # Homebrewパッケージ一覧・普段使い機用（brew bundleで一括導入）
+│   ├── Brewfile.common     # ↑と↓の両方が読み込む共通部分（CLI・開発・インフラ系）
+│   ├── Brewfile.worker     # ワーカー機（リモートデスクトップ運用のMac）用
 │   ├── defaults.sh         # キーボード・Finder・Dock・電源等のシステム設定を適用・検証するスクリプト
-│   └── reset-tailscale.sh  # Tailscaleのデバイス身元を完全リセット（Time Machine移行後の重複対策）
-├── worker/             # ワーカーモードの切り替え（下記「ワーカーモード」参照）
-│   ├── setup.sh        # リモート運用向けの設定を一括ON（SSH・画面共有・非スリープ・即ロック等）
-│   ├── setdown.sh      # 上記を解除して普段使いのMacに戻す
-│   └── common.sh       # 上記2つの共通実体（直接は実行しない）
-├── colima/             # ColimaのVMを壊さないための仕掛け（下記「Colimaの保護」参照）
-│   ├── graceful-stop.sh  # → ~/.local/bin/colima-graceful-stop  ログアウト時にcolima stopする常駐スクリプト
-│   ├── fsck.sh           # → ~/.local/bin/colima-fsck  データディスクの健全性チェック・修復
-│   └── com.miyanaga.colima-graceful-stop.plist  # → ~/Library/LaunchAgents/  上記の常駐定義
-└── ssh/
-    ├── backup-to-1password.sh  # ~/.ssh 全体を1Passwordに書類として保存（整理前のセーフティネット）
-    ├── export.sh       # 旧マシンで実行: 使用中の鍵+config+.aws等を暗号化アーカイブに
-    └── import.sh       # 新マシンで実行: アーカイブから復元
+│   ├── reset-tailscale.sh  # Tailscaleのデバイス身元を完全リセット（Time Machine移行後の重複対策）
+│   ├── worker/             # ワーカーモードの切り替え（下記「ワーカーモード」参照）
+│   │   ├── setup.sh        # リモート運用向けの設定を一括ON（SSH・画面共有・非スリープ・即ロック等）
+│   │   ├── setdown.sh      # 上記を解除して普段使いのMacに戻す
+│   │   └── common.sh       # 上記2つの共通実体（直接は実行しない）
+│   └── colima/             # ColimaのVMを壊さないための仕掛け（下記「Colimaの保護」参照）
+│       ├── graceful-stop.sh  # → ~/.local/bin/colima-graceful-stop  ログアウト時にcolima stopする常駐スクリプト
+│       ├── fsck.sh           # → ~/.local/bin/colima-fsck  データディスクの健全性チェック・修復
+│       └── com.miyanaga.colima-graceful-stop.plist  # → ~/Library/LaunchAgents/  上記の常駐定義
+│
+│   # ---- Ubuntu固有 ----
+└── ubuntu/
+    ├── install.sh          # Linux側のパス補正（VS Code等）と前提コマンドの確認
+    └── install-packages.sh # aptで開発用CLI一式＋Chromeを導入（Brewfile.commonのapt版）
 ```
+
+## macとUbuntuを同等に保つ
+
+普段使いはMac、開発サーバーはUbuntu。**この2つで同じことができる状態を保つ**のが方針です。
+
+```bash
+# macOS
+./install.sh                        # 共通リンク + macos/install.sh
+brew bundle --file macos/Brewfile   # パッケージ
+
+# Ubuntu
+./install.sh                        # 共通リンク + ubuntu/install.sh
+./ubuntu/install-packages.sh        # パッケージ（--check で導入状況だけ確認）
+
+# 自社CLIはどちらも同じ（bin.ideamans.com が deb も配っている）
+./install-all-bin-repo.sh
+```
+
+`ubuntu/install-packages.sh` は `macos/Brewfile.common` のapt版です。**片方にCLIツールを
+足したらもう片方にも足す**こと。Ubuntu側で配布形態の都合から自動化できないものは、
+スクリプト末尾の「手動で入れるもの」に理由付きで残してあります。
+
+GUIアプリは同等にしません。Ubuntu側はサーバー用途なのでChromeだけです。
 
 ## Brewfileの3分割（普段使い機 / ワーカー機）
 
@@ -68,8 +111,8 @@ dotfiles/
 | ファイル | 中身 | 使い方 |
 | --- | --- | --- |
 | `Brewfile.common` | CLI・開発環境・インフラ系（git/mise/colima/docker/gh/aws/画像処理/1Password/Tailscale/エディタ/LibreOffice等） | 単体では使わない。下2つが読み込む |
-| `Brewfile` | common + 普段使いのGUIアプリ（djay Pro / rekordbox / Blender / Pixelmator / OBS / Arduino / Android Studio / CleanShot / App Store経由のアプリ等） | `brew bundle --file Brewfile` |
-| `Brewfile.worker` | common + ブラウザ2種（Firefox / Chromium） | `brew bundle --file Brewfile.worker` |
+| `Brewfile` | common + 普段使いのGUIアプリ（djay Pro / rekordbox / Blender / Pixelmator / OBS / Arduino / Android Studio / CleanShot / App Store経由のアプリ等） | `brew bundle --file macos/Brewfile` |
+| `Brewfile.worker` | common + ブラウザ2種（Firefox / Chromium） | `brew bundle --file macos/Brewfile.worker` |
 
 **ワーカー機** は普段使いはせず、常時起動してリモートデスクトップ経由で定期的な作業（バッチ・変換・ビルド・検証）を担うMacを想定しています。方針:
 
@@ -84,19 +127,19 @@ dotfiles/
 分割が正しく展開されているかは、パッケージ一覧を出して確認できます:
 
 ```bash
-brew bundle list --all --file ~/dev/dotfiles/Brewfile.worker
+brew bundle list --all --file ~/dev/dotfiles/macos/Brewfile.worker
 ```
 
 ## ワーカーモード（自宅据え置きのMacを安全にリモート運用する）
 
-`Brewfile.worker` が「何を入れるか」なら、`worker/setup.sh` は「どう振る舞わせるか」です。
+`Brewfile.worker` が「何を入れるか」なら、`macos/worker/setup.sh` は「どう振る舞わせるか」です。
 自宅に据え置いてTailscale経由で使うMacに必要なシステム設定を、まとめてON/OFFします。
 
 ```bash
-./worker/setup.sh            # ワーカーモードにする
-./worker/setup.sh --check    # 現在値が期待どおりか検証するだけ
-./worker/setdown.sh          # 解除して普段使いのMacに戻す
-./worker/setdown.sh --check
+./macos/worker/setup.sh            # ワーカーモードにする
+./macos/worker/setup.sh --check    # 現在値が期待どおりか検証するだけ
+./macos/worker/setdown.sh          # 解除して普段使いのMacに戻す
+./macos/worker/setdown.sh --check
 ```
 
 どれも冪等です。root権限が要るので `--check` でもsudoのパスワードを聞かれます
@@ -251,9 +294,9 @@ cd ~/dev/dotfiles
 
 # 3. Homebrewパッケージを一括インストール
 # --verbose 必須級: 付けないと先読みダウンロード中の出力が抑制され、無言のまま数十分固まったように見える
-brew bundle --file ~/dev/dotfiles/Brewfile --verbose
+brew bundle --file ~/dev/dotfiles/macos/Brewfile --verbose
 # ワーカー機（普段使いしないMac）の場合は代わりに:
-# brew bundle --file ~/dev/dotfiles/Brewfile.worker --verbose
+# brew bundle --file ~/dev/dotfiles/macos/Brewfile.worker --verbose
 
 # 4. macOSシステム設定を適用（キーボード・Finder・Dock・電源等。一部は要再ログイン）
 #    電源設定(pmset)の変更でsudoのパスワードを聞かれる
@@ -269,7 +312,7 @@ exec zsh
 
 # 7. （ワーカー機の場合のみ）リモート運用向けの設定を入れる
 #    SSH・画面共有・非スリープ・即ロック等。詳細は上の「ワーカーモード」
-./worker/setup.sh
+./macos/worker/setup.sh
 ```
 
 ## 日常の使い方
@@ -301,7 +344,7 @@ cd ~/dev/dotfiles && git pull
 
 ```bash
 brew bundle dump --file /tmp/Brewfile.dump
-diff <(brew bundle list --all --file ~/dev/dotfiles/Brewfile | sort) \
+diff <(brew bundle list --all --file ~/dev/dotfiles/macos/Brewfile | sort) \
      <(brew bundle list --all --file /tmp/Brewfile.dump | sort)
 ```
 
@@ -436,6 +479,35 @@ export.sh が選ぶのは **configが実際に参照している鍵だけ**で�
 それに加えて `~/.zsh_secrets` `~/.aws` `~/.npmrc`、そして **`~/.config` 一式**（gcloud/gh/firebase等のアプリ認証。
 yarnキャッシュ・gcloudのPython環境などの再生成可能な大物は除外済み）も同梱します。
 configから参照されていない鍵は新マシンに持ち込みません — 必要になったら手順1のバックアップから取り出します。
+
+## 開発ツリーのクレデンシャル（.env・service-account.json 等）
+
+`~/dev` `~/m4pro/dev` にある `.env` や `service-account.json` `firebase-admin.json` は
+`.gitignore` で除外されているため **gitのどこにも残りません**。マシンが飛ぶと消えます。
+
+これを1Passwordの `dev-credentials` vault に退避・復元するのが
+`.claude/skills/backup-dev-credential/`（Claude Codeのスキルとして `~/.claude/skills/` にリンクされる）。
+スキルとしてだけでなく、スクリプトを直接叩いても使えます。
+
+```bash
+S=~/.claude/skills/backup-dev-credential/scripts
+
+$S/scan.sh                     # 対象の一覧（gitに追跡されていないものだけ）
+$S/backup.sh                   # 何が保存されるかの確認（既定はdry-run）
+$S/backup.sh --apply           # 1Passwordへ保存
+
+$S/restore.sh                  # 保存済みリポジトリの一覧
+$S/restore.sh ideamans/lightfile6 --apply    # 書き戻す
+$S/restore.sh --all --apply                  # 全部を元の場所へ
+```
+
+リポジトリ1件が1アイテムになり、**タイトルはGitHubのパス**（`ideamans/lightfile6`）。
+各ファイルは添付として入り、元の相対パスは `meta.manifest` に記録されます。
+
+**`op` は実行のたびにTouch IDを求めます。**このアカウントはIndividualなので無人実行できる
+サービスアカウントは使えません（Business/Teams限定）。そのため全リポジトリを1プロセスで
+処理する作りにしてあり、`--apply` 一発なら100リポジトリでも認証は原則1回で済みます。
+`--only` でリポジトリごとに回すと、その回数だけ認証を求められます。
 
 ### さらにセキュアにするなら（任意・今後の改善候補）
 

@@ -2,13 +2,19 @@
 # dotfiles をホームディレクトリにシンボリックリンクとして配置する。
 # 既存のファイル/リンクがあれば ~/.dotfiles.backup/<日時>/ に退避してから置き換える。
 # 何度実行しても安全（すでに正しいリンクならスキップ）。
+#
+# ここで扱うのはOSを問わない共通設定だけ。OS固有の処理は
+# macos/install.sh と ubuntu/install.sh に分けてあり、最後に呼び出す。
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="$HOME/.dotfiles.backup/$(date +%Y%m%d-%H%M%S)"
+export DOTFILES_DIR BACKUP_DIR
 
-# リンク対応表: "リポジトリ内のパス:ホームでのパス"
-LINKS=(
+source "$DOTFILES_DIR/lib/install-common.sh"
+
+# OSを問わない設定。"リポジトリ内のパス:ホームでのパス"
+COMMON_LINKS=(
   "zsh/zshrc:.zshrc"
   "zsh/zprofile:.zprofile"
   "zsh/functions.zsh:.zsh_functions"
@@ -17,71 +23,16 @@ LINKS=(
   "starship/starship.toml:.config/starship.toml"
   "zed/settings.json:.config/zed/settings.json"
   "zed/keymap.json:.config/zed/keymap.json"
-  "vscode/keybindings.json:Library/Application Support/Code/User/keybindings.json"
-  "colima/graceful-stop.sh:.local/bin/colima-graceful-stop"
-  "colima/fsck.sh:.local/bin/colima-fsck"
-  "colima/com.miyanaga.colima-graceful-stop.plist:Library/LaunchAgents/com.miyanaga.colima-graceful-stop.plist"
+  ".claude/skills/backup-dev-credential:.claude/skills/backup-dev-credential"
 )
 
-# launchd に登録する LaunchAgent のラベル（上の LINKS で plist をリンクしたもの）
-AGENTS=(
-  "com.miyanaga.colima-graceful-stop"
-)
+link_all "${COMMON_LINKS[@]}"
 
-link_one() {
-  local src="$DOTFILES_DIR/$1"
-  local dst="$HOME/$2"
-
-  # すでに正しいリンクなら何もしない
-  if [[ -L "$dst" && "$(readlink "$dst")" == "$src" ]]; then
-    echo "ok      $dst"
-    return
-  fi
-
-  # 既存のファイル・リンクは退避
-  if [[ -e "$dst" || -L "$dst" ]]; then
-    mkdir -p "$BACKUP_DIR/$(dirname "$2")"
-    mv "$dst" "$BACKUP_DIR/$2"
-    echo "backup  $dst -> $BACKUP_DIR/$2"
-  fi
-
-  mkdir -p "$(dirname "$dst")"
-  ln -s "$src" "$dst"
-  echo "link    $dst -> $src"
-}
-
-bootstrap_agent() {
-  local label="$1"
-  local plist="$HOME/Library/LaunchAgents/$label.plist"
-  local domain="gui/$(id -u)"
-
-  if [[ ! -e "$plist" ]]; then
-    echo "skip    launchd $label (plistがない)"
-    return
-  fi
-
-  # すでに登録済みなら触らない。
-  # bootout すると常駐スクリプトに SIGTERM が飛んで colima が停止してしまうので、
-  # install.sh を再実行しただけで作業中のVMが落ちる、という事故を避ける。
-  if launchctl print "$domain/$label" >/dev/null 2>&1; then
-    echo "ok      launchd $label (登録済み)"
-    return
-  fi
-
-  if launchctl bootstrap "$domain" "$plist" 2>/dev/null; then
-    echo "load    launchd $label"
-  else
-    echo "warn    launchd $label の登録に失敗: launchctl bootstrap $domain \"$plist\"" >&2
-  fi
-}
-
-for pair in "${LINKS[@]}"; do
-  link_one "${pair%%:*}" "${pair##*:}"
-done
-
-for label in "${AGENTS[@]}"; do
-  bootstrap_agent "$label"
-done
+case "$(uname -s)" in
+  Darwin) "$DOTFILES_DIR/macos/install.sh" ;;
+  Linux)  "$DOTFILES_DIR/ubuntu/install.sh" ;;
+  *)      echo "warn    OS固有の処理はスキップします: $(uname -s)" >&2 ;;
+esac
 
 echo
 echo "完了。新しいターミナルを開くか 'exec zsh' で反映されます。"
