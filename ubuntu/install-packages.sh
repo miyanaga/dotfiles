@@ -111,10 +111,8 @@ BASE_PKGS=(
   zsh-autosuggestions          # 入力中に履歴からの候補をグレー表示
 )
 
-# 上で足したサードパーティリポジトリのもの
+# 上で足したサードパーティリポジトリのもの（Dockerは手順が多いので後述の専用ブロックで扱う）
 THIRD_PARTY_PKGS=(
-  docker-ce docker-ce-cli containerd.io    # Linuxではcolima不要。Dockerが直接動く
-  docker-buildx-plugin docker-compose-plugin
   gh                                       # GitHub CLI
   google-chrome-stable
   google-cloud-cli                         # gcloud / gsutil / bq
@@ -126,10 +124,39 @@ THIRD_PARTY_PKGS=(
 run sudo apt-get install -y --no-install-recommends "${BASE_PKGS[@]}"
 run sudo apt-get install -y --no-install-recommends "${THIRD_PARTY_PKGS[@]}"
 
+echo
+echo "=== Docker（Docker公式の docker-ce。Ubuntu同梱の docker.io ではない） ==="
+# macOSはcolima（VM上でdockerを動かす）だが、Linuxはカーネルが同じなので
+# Docker Engineが直接動く。Docker公式の手順どおりに入れる。
+#   https://docs.docker.com/engine/install/ubuntu/
+
+# 公式版と衝突するUbuntu同梱パッケージを先に外す。
+# 入ったままだとdockerコマンドやcontainerdが二重になって競合する。
+CONFLICTING=(docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc)
+for pkg in "${CONFLICTING[@]}"; do
+  if dpkg -s "$pkg" >/dev/null 2>&1; then
+    echo "del     $pkg（Docker公式版と衝突するため）"
+    run sudo apt-get remove -y "$pkg"
+  fi
+done
+
+run sudo apt-get install -y \
+  docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# デーモンを起動して自動起動を有効にする（macOSのcolimaと違い常駐サービス）
+run sudo systemctl enable --now docker
+run sudo systemctl restart docker
+
 # 現在のユーザーがsudo無しでdockerを使えるようにする（要ログインし直し）
 if ! id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
   echo "add     $USER を docker グループへ（反映にはログインし直しが要る）"
   run sudo usermod -aG docker "$USER"
+fi
+
+if [[ "$MODE" != dryrun ]]; then
+  sudo docker ps >/dev/null 2>&1 \
+    && echo "ok      docker 稼働中" \
+    || echo "warn    docker が動いていません: sudo systemctl status docker" >&2
 fi
 
 echo

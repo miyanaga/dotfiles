@@ -24,10 +24,18 @@ def list_items(vault, tag):
 
 
 def get_item(ref, vault):
+    """アイテムを引く。見つからない場合はNone、opそのものが失敗したら例外。
+
+    「アイテムが無い」と「1Passwordの認証が通っていない」を混同すると、
+    認証待ちのタイムアウトが「バックアップが存在しない」ように見えてしまう。
+    """
     r = op(["item", "get", ref, "--vault", vault, "--format", "json"])
-    if r.returncode != 0:
+    if r.returncode == 0:
+        return json.loads(r.stdout)
+    err = r.stderr.strip()
+    if "isn't an item" in err or "no item matches" in err.lower():
         return None
-    return json.loads(r.stdout)
+    raise RuntimeError(f"opの実行に失敗しました: {err}")
 
 
 def field(item, section_label, field_label):
@@ -119,4 +127,8 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except RuntimeError as e:
+        print(e, file=sys.stderr)
+        sys.exit(2)
