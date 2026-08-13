@@ -26,6 +26,8 @@ brew "googleworkspace-cli"      # Google公式のWorkspace CLI。コマンド名
                                 # （Drive/Gmail/Calendar/Sheets/Docs/Chat/Admin等。初回は要OAuthログイン）
                                 # 同名バイナリの formula "gws"（gitワークスペース管理）とは競合するので注意
 brew "duckdb"                   # 組み込み型の分析用SQLデータベース（CSV/Parquet等を直接クエリできる）
+brew "d2"                       # テキストから図（構成図・フロー図）を生成する。SVG/PNG出力。
+                                # エージェントに図を書かせるとき、画像を直接作らせるより差分が読めて扱いやすい
 
 # 画像処理
 brew "webp"                     # WebPのライブラリ(libwebp)とCLI（cwebp/dwebp/gif2webp）。formula名は libwebp ではなく webp

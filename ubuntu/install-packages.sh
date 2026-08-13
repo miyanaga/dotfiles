@@ -37,7 +37,7 @@ if [[ "$MODE" == check ]]; then
   printf '%-26s %s\n' "コマンド" "状態"
   for c in git zsh curl jq unzip make gcc \
            mise starship docker gh glab aws session-manager-plugin \
-           duckdb cwebp avifenc magick op gcloud tailscale google-chrome; do
+           duckdb d2 cwebp avifenc magick op gcloud tailscale google-chrome; do
     if command -v "$c" >/dev/null; then
       printf '%-26s \033[32m有\033[0m  %s\n' "$c" "$(command -v "$c")"
     else
@@ -198,6 +198,16 @@ elif [[ "$ARCH" == amd64 || "$ARCH" == arm64 ]]; then
   run bash -c "tmp=\$(mktemp -d) && \
     curl -fsSL 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/$smp_dir/session-manager-plugin.deb' -o \"\$tmp/smp.deb\" && \
     sudo dpkg -i \"\$tmp/smp.deb\" && rm -rf \"\$tmp\""
+fi
+
+# d2: aptリポジトリもdebも無いので公式インストーラを使う（tar.gzを展開して置くだけ）。
+# --prefix を渡さないと /usr/local/lib が書けない環境では ~/.local に入るので、
+# starship や aws と同じくシステム側に揃うよう明示する（中でsudoを呼ぶ）。
+if command -v d2 >/dev/null; then
+  echo "ok      d2"
+else
+  echo "get     d2"
+  run bash -c "curl -fsSL https://d2lang.com/install.sh | sh -s -- --prefix /usr/local"
 fi
 
 # zsh-history-substring-search: aptに無いので clone する（zshrcが探す場所に置く）
