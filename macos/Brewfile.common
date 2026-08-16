@@ -29,11 +29,12 @@ brew "duckdb"                   # 組み込み型の分析用SQLデータベー�
 brew "d2"                       # テキストから図（構成図・フロー図）を生成する。SVG/PNG出力。
                                 # エージェントに図を書かせるとき、画像を直接作らせるより差分が読めて扱いやすい
 
-# 画像処理
+# 画像・動画処理
 brew "webp"                     # WebPのライブラリ(libwebp)とCLI（cwebp/dwebp/gif2webp）。formula名は libwebp ではなく webp
 brew "libavif"                  # AVIFのCLI（avifenc/avifdec）。ImageMagick側のAVIF対応は依存のlibheif経由なので、
                                 # これは単体のエンコーダ/デコーダが欲しい場合に入れる
 brew "imagemagick"              # magickコマンド。webp/libheif等は依存で入る（AVIF・HEIC・WebPとも読み書き可）
+brew "ffmpeg"                   # 動画・音声の変換／切り出し／情報取得（ffmpeg / ffprobe）
 
 # zshプラグイン
 brew "zsh-autosuggestions"            # 入力中に履歴からの候補をグレー表示

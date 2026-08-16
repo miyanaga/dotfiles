@@ -37,7 +37,7 @@ if [[ "$MODE" == check ]]; then
   printf '%-26s %s\n' "コマンド" "状態"
   for c in git zsh curl jq unzip make gcc \
            mise starship docker gh glab aws session-manager-plugin \
-           duckdb d2 cwebp avifenc magick op gcloud tailscale google-chrome; do
+           duckdb d2 cwebp avifenc magick ffmpeg op gcloud tailscale google-chrome; do
     if command -v "$c" >/dev/null; then
       printf '%-26s \033[32m有\033[0m  %s\n' "$c" "$(command -v "$c")"
     else
@@ -108,6 +108,7 @@ BASE_PKGS=(
   webp                         # cwebp / dwebp / gif2webp
   libavif-bin                  # avifenc / avifdec（macOSの libavif 相当）
   imagemagick                  # magick コマンド
+  ffmpeg                       # ffmpeg / ffprobe（動画・音声の変換）
   zsh-autosuggestions          # 入力中に履歴からの候補をグレー表示
 )
 
